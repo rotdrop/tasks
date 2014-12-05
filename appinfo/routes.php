@@ -19,7 +19,6 @@
 * License along with this library.  If not, see <http://www.gnu.org/licenses/>.
 *
 */
-
 namespace OCA\Tasks;
 
 // use \OCP\AppFramework\App;
@@ -52,6 +51,8 @@ $application->registerRoutes($this, array('routes' => array(
 	array('name' => 'tasks#setTaskName',	'url' => '/tasks/{taskID}/name',		'verb' => 'POST'),
 	array('name' => 'tasks#setTaskCalendar','url' => '/tasks/{taskID}/calendar',	'verb' => 'POST'),
 	array('name' => 'tasks#setTaskNote',	'url' => '/tasks/{taskID}/note',		'verb' => 'POST'),
+	array('name' => 'tasks#setCategories',	'url' => '/tasks/{taskID}/categories',		'verb' => 'POST'),
+	array('name' => 'tasks#setLocation',	'url' => '/tasks/{taskID}/location',		'verb' => 'POST'),
 	array('name' => 'tasks#setDueDate',		'url' => '/tasks/{taskID}/due',			'verb' => 'POST'),
 	array('name' => 'tasks#setStartDate',	'url' => '/tasks/{taskID}/start',		'verb' => 'POST'),
 

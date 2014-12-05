@@ -266,13 +266,14 @@ class TasksController extends Controller {
 		$response = new JSONResponse();
 		$user_timezone = \OC_Calendar_App::getTimezone();
 		$request = array(
-				'summary'			=> $taskName,
+				'summary'		=> $taskName,
 				'categories'		=> null,
-				'priority'			=> $starred,
-				'location' 			=> null,
-				'due'				=> $due,
-				'start'				=> $start,
-				'description'		=> null
+				'priority'		=> $starred,
+				'location' 		=> null,
+				'due'			=> $due,
+				'start'			=> $start,
+				'description'		=> null,
+                                'complete'		=> null,
 			);
 		$vcalendar = Helper::createVCalendarFromRequest($request);
 		$taskId = \OC_Calendar_Object::add($calendarId, $vcalendar->serialize());
@@ -434,15 +435,24 @@ class TasksController extends Controller {
 		}
 		elseif (in_array($type,$types)) {
 			try{
+                                $description = $this->params('description');
 				if($valarm == null) {
 					$valarm = new \OC_VObject('VALARM');
-					$valarm->setString('ACTION', $action);
-					$valarm->setString('DESCRIPTION', 'Default Event Notification');
-					$valarm->setString('');
 					$vtodo->add($valarm);
+                                        $valarm = $vtodo->VALARM;
+                                        if (!$description) {
+                                                $description = 'Default Event Notification';
+                                        }
+                                        $valarm->setString('DESCRIPTION', $description);
 				} else {
 					unset($valarm->TRIGGER);
+                                        unset($valarm->ACTION);
+                                        if ($description) {
+                                                unset($valarm->DESCRIPTION);
+                                                $valarm->setString('DESCRIPTION', $description);
+                                        }
 				}
+                                $valarm->setString('ACTION', $action);
 				$tv = '';
 				$related = null;
 				if ($type == 'DATE-TIME') {
@@ -546,11 +556,15 @@ class TasksController extends Controller {
 			$vtodo = $vcalendar->VTODO;
 
 			// Determine new commentId by looping through all comments
-			$commentIds = array();
-			foreach($vtodo->COMMENT as $com) {
-				$commentIds[] = (int)$com['ID']->value;
-			}
-			$commentId = 1+max($commentIds);
+                        if ($vtodo->COMMENT) {
+                                $commentIds = array();
+                                foreach($vtodo->COMMENT as $com) {
+                                        $commentIds[] = (int)$com['ID']->value;
+                                }
+                                $commentId = 1+max($commentIds);
+                        } else {
+                                $commentId = 1;
+                        }
 
 			$now = 	new \DateTime();
 			$vtodo->addProperty('COMMENT',$comment,

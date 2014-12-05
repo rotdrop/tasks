@@ -35,10 +35,11 @@ Class Helper {
 
 	public static function arrayForJSON($id, $vtodo, $user_timezone){
 		$task = array( 'id' => $id );
-		$task['name'] = $vtodo->getAsString('SUMMARY');
+                $quoted = array('\,' => ',', '\;' => ';');
+		$task['name'] = strtr($vtodo->getAsString('SUMMARY'), $quoted);
 		$task['created'] = $vtodo->getAsString('CREATED');
-		$task['note'] = $vtodo->getAsString('DESCRIPTION');
-		$task['location'] = $vtodo->getAsString('LOCATION');
+		$task['note'] = strtr($vtodo->getAsString('DESCRIPTION'), $quoted);
+		$task['location'] = strtr($vtodo->getAsString('LOCATION'), $quoted);
 		$task['categories'] = $vtodo->getAsArray('CATEGORIES');
 		$start = $vtodo->DTSTART;
 		if ($start) {
