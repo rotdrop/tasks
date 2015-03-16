@@ -559,7 +559,7 @@ class TasksController extends Controller {
                         if ($vtodo->COMMENT) {
                                 $commentIds = array();
                                 foreach($vtodo->COMMENT as $com) {
-                                        $commentIds[] = (int)$com['ID']->value;
+                                        $commentIds[] = (int)$com['X-OC-ID']->value;
                                 }
                                 $commentId = 1+max($commentIds);
                         } else {
@@ -569,9 +569,9 @@ class TasksController extends Controller {
 			$now = 	new \DateTime();
 			$vtodo->addProperty('COMMENT',$comment,
 				array(
-					'ID' => $commentId,
-					'USERID' => $this->userId,
-					'DATE-TIME' => $now->format('Ymd\THis\Z')
+					'X-OC-ID' => $commentId,
+					'X-OC-USERID' => $this->userId,
+					'X-OC-DATE-TIME' => $now->format('Ymd\THis\Z')
 					)
 				);
 			\OC_Calendar_Object::edit($taskId, $vcalendar->serialize());
@@ -610,7 +610,7 @@ class TasksController extends Controller {
 			$vtodo = $vcalendar->VTODO;
 			$commentIndex = $this->getCommentById($vtodo,$commentId);
 			$comment = $vtodo->children[$commentIndex];
-			if($comment['USERID'] == $this->userId){
+			if($comment['X-OC-USERID'] == $this->userId){
 				unset($vtodo->children[$commentIndex]);
 				\OC_Calendar_Object::edit($taskId, $vcalendar->serialize());
 			}else{
@@ -628,7 +628,7 @@ class TasksController extends Controller {
 	public function getCommentById($vtodo,$commentId) {
 		$idx = 0;
 		foreach ($vtodo->children as $i => &$property) {
-			if ( $property->name == 'COMMENT' && $property['ID']->value == $commentId ) {
+			if ( $property->name == 'COMMENT' && $property['X-OC-ID']->value == $commentId ) {
 				return $idx;
 			}
 			$idx += 1;
