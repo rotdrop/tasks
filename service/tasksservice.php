@@ -304,6 +304,25 @@ class TasksService {
 	}
 
 	/**
+	 * set categories to task by id
+	 * @param  int    $taskID
+	 * @param  string $categories
+	 * @return bool
+	 * @throws \Exception
+	 */
+	public function setCategories($taskID, $categories){
+		$vcalendar = \OC_Calendar_App::getVCalendar($taskID);
+		$vtodo = $vcalendar->VTODO;
+                $taskcategories = explode(',', $categories);
+		if(count($taskcategories)){
+			$vtodo->CATEGORIES = $taskcategories;
+		} else{
+			unset($vtodo->{'CATEGORIES'});
+		}
+		return $this->helper->editVCalendar($vcalendar, $taskID);
+        }
+
+	/**
 	 * remove category from task by id
 	 * @param  int    $taskID
 	 * @param  string $category

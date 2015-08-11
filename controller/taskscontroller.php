@@ -173,6 +173,15 @@ class TasksController extends Controller {
 	/**
 	 * @NoAdminRequired
 	 */
+	public function setCategories($taskID, $categories){
+		return $this->generateResponse(function () use ($taskID, $categories) {
+			return $this->tasksService->setCategories($taskID, $categories);
+		});
+	}
+
+	/**
+	 * @NoAdminRequired
+	 */
 	public function setLocation($taskID, $location){
 		return $this->generateResponse(function () use ($taskID, $location) {
 			return $this->tasksService->setLocation($taskID, $location);
