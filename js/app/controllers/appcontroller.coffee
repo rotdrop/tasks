@@ -23,15 +23,15 @@ License along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
 angular.module('Tasks').controller 'AppController',
 ['$scope', 'Persistence', '$route', 'Status', '$timeout',
-'$location', '$routeParams', 'Loading','$modal','SettingsModel',
+'$location', '$routeParams', 'Loading','SettingsModel',
 ($scope, Persistence, $route, status, $timeout, $location,
-$routeParams, Loading, $modal, SettingsModel) ->
+$routeParams, Loading, SettingsModel) ->
 
 	class AppController
 
 		constructor: (@_$scope, @_persistence, @_$route, @_$status,
 			@_$timeout, @_$location, @_$routeparams, @_Loading,
-			@_$modal,@_$settingsmodel) ->
+			@_$settingsmodel) ->
 
 			@_$scope.initialized = false
 
@@ -48,28 +48,23 @@ $routeParams, Loading, $modal, SettingsModel) ->
 
 			@_persistence.init().then(successCallback)
 
-			@_$scope.closeAll = () ->
-				if _$scope.status.searchActive
-					_$location.path('/search/'+_$scope.route.searchString)
-				else
+			@_$scope.closeAll = ($event) ->
+				if $($event.target).closest('.close-all').length ||
+				$($event.currentTarget).is($($event.target).closest('.handler'))
 					_$location.path('/lists/'+_$scope.route.listID)
-
-				_$scope.status.addingList = false
-				_$scope.status.focusTaskInput = false
-				_$scope.status.newListName = ""
+					_$scope.status.addingList = false
+					_$scope.status.focusTaskInput = false
+					_$scope.status.newListName = ""
+				if !$($event.target).closest('.newList').length
+					_$scope.status.addingList = false
+					_$scope.status.newListName = ""
+				else
+					return
 
 			@_$scope.isLoading = () ->
 				return _Loading.isLoading()
 
-			@_$scope.showSettings = () ->
-				_$scope.modalInstance = _$modal.open({
-					templateUrl: 'part.settings.html',
-					controller: 'SettingsController',
-					backdrop: true,
-					windowClass: 'test'
-				})
-
 	return new AppController($scope, Persistence, $route, status, $timeout,
-	$location, $routeParams, Loading, $modal, SettingsModel)
+	$location, $routeParams, Loading, SettingsModel)
 
 ]

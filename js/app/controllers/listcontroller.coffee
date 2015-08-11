@@ -22,15 +22,15 @@ License along with this library.  If not, see <http://www.gnu.org/licenses/>.
 angular.module('Tasks').controller 'ListController',
 ['$scope', '$window', '$routeParams', 'ListsModel',
 'TasksBusinessLayer', 'CollectionsModel', 'ListsBusinessLayer',
-'$location',
+'$location', 'SearchBusinessLayer',
 ($scope, $window, $routeParams, ListsModel, TasksBusinessLayer,
-CollectionsModel, ListsBusinessLayer, $location) ->
+CollectionsModel, ListsBusinessLayer, $location, SearchBusinessLayer) ->
 
 	class ListController
 
 		constructor: (@_$scope,@_$window,@_$routeParams,
 		@_$listsmodel, @_$tasksbusinesslayer, @_$collectionsmodel,
-		@_$listsbusinesslayer, @$location) ->
+		@_$listsbusinesslayer, @$location, @_$searchbusinesslayer) ->
 
 
 			@_$scope.collections = @_$collectionsmodel.getAll()
@@ -51,6 +51,7 @@ CollectionsModel, ListsBusinessLayer, $location) ->
 					$location.path('/lists/'+_$listsmodel.getStandardList())
 
 			@_$scope.startAddingList = () ->
+				$location.path('/lists/'+_$scope.route.listID)
 				_$scope.status.addingList = true
 
 			@_$scope.endAddingList = () ->
@@ -93,6 +94,7 @@ CollectionsModel, ListsBusinessLayer, $location) ->
 					'An empty name is not allowed.'))
 
 			@_$scope.editName = (listID) ->
+				_$scope.status.addingList = false
 				_$scope.status.listNameBackup = _$listsmodel.getById(listID).displayname
 				$location.path('/lists/'+_$scope.route.listID+'/edit/name')
 
@@ -130,7 +132,8 @@ CollectionsModel, ListsBusinessLayer, $location) ->
 				_$listsbusinesslayer.setListName listID listName
 
 			@_$scope.getCollectionCount = (collectionID) ->
-				return _$collectionsmodel.getCount(collectionID)
+				filter = _$searchbusinesslayer.getFilter()
+				return _$collectionsmodel.getCount(collectionID,filter)
 
 			@_$scope.hideCollection = (collectionID) ->
 				collection = _$collectionsmodel.getById(collectionID)
@@ -144,12 +147,14 @@ CollectionsModel, ListsBusinessLayer, $location) ->
 
 			@_$scope.getCollectionString = (collectionID) ->
 				if collectionID != 'completed'
-					return _$collectionsmodel.getCount(collectionID)
+					filter = _$searchbusinesslayer.getFilter()
+					return _$collectionsmodel.getCount(collectionID,filter)
 				else
 					return ''
 
 			@_$scope.getListCount = (listID,type) ->
-				return _$listsmodel.getCount(listID,type)
+				filter = _$searchbusinesslayer.getFilter()
+				return _$listsmodel.getCount(listID,type,filter)
 
 			@_$scope.showDelete = (listID) ->
 				return _$scope.route.listID not in
@@ -164,5 +169,5 @@ CollectionsModel, ListsBusinessLayer, $location) ->
 
 	return new ListController($scope, $window, $routeParams,
 		ListsModel, TasksBusinessLayer, CollectionsModel,
-		ListsBusinessLayer, $location)
+		ListsBusinessLayer, $location, SearchBusinessLayer)
 ]

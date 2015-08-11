@@ -22,25 +22,40 @@ License along with this library.  If not, see <http://www.gnu.org/licenses/>.
 angular.module('Tasks').controller 'DetailsController',
 ['$scope', '$window', 'TasksModel', 'TasksBusinessLayer',
 '$route', '$location', '$timeout', '$routeParams',
-'SettingsModel',
+'SettingsModel', 'Loading',
 ($scope, $window, TasksModel, TasksBusinessLayer, $route, $location,
-$timeout, $routeParams, SettingsModel) ->
+$timeout, $routeParams, SettingsModel, Loading) ->
 
 	class DetailsController
 
 		constructor: (@_$scope, @_$window, @_$tasksmodel,
 			@_tasksbusinesslayer, @_$route, @_$location, @_$timeout,
-			@_$routeparams, @_$settingsmodel) ->
+			@_$routeparams, @_$settingsmodel, @_Loading) ->
 
 			@_$scope.task = _$tasksmodel.getById(_$scope.route.taskID)
+
+			@_$scope.found = true
 
 			@_$scope.$on('$routeChangeSuccess', () ->
 				task = _$tasksmodel.getById(_$scope.route.taskID)
 				if !(angular.isUndefined(task) || task == null)
 					_$scope.task = task
+					_$scope.found = true
+				else if (_$scope.route.taskID != undefined)
+					_$scope.found = false
+					_tasksbusinesslayer.getTask _$scope.route.taskID
+						, (data) =>
+							_$scope.loadTask(_$scope.route.taskID)
 			)
-
+			
 			@_$scope.settingsmodel = @_$settingsmodel
+
+			# workaroung till https://github.com/angular-ui/ui-select/issues/587
+			# is resolved
+			@_$scope.settingsmodel.add({
+					'id':			'various',
+					'categories': 	[]
+				})
 
 			@_$scope.isAddingComment = false
 
@@ -69,10 +84,22 @@ $timeout, $routeParams, SettingsModel) ->
 					id:		'second'}
 			]
 
-			# console.log(_$settingsmodel.getById('various').firstDay)
+			@_$scope.loadTask = (taskID) ->
+				task = _$tasksmodel.getById(_$scope.route.taskID)
+				if !(angular.isUndefined(task) || task == null)
+					_$scope.task = task
+					_$scope.found = true
 
-			@_$scope.params = (task) ->
-				params = [
+			@_$scope.TaskState = () ->
+				if _$scope.found
+					return 'found'
+				else
+					if _Loading.isLoading()
+						return 'loading'
+					else
+						return null
+
+			@_$scope.params = [
 						{
 							name:	t('tasks','before beginning'),
 							invert:	true
@@ -93,107 +120,94 @@ $timeout, $routeParams, SettingsModel) ->
 							invert:	false
 							related:'END',
 							id:		"01"}
-					]
-				if task.due && task.start
-					return params
-				else if task.start
-					return params.slice(0,2)
-				else
-					return params.slice(2)
+			]
 
-			@_$scope.closeDetails = () ->
-				if _$scope.status.searchActive
-					_$location.path('/search/'+_$scope.route.searchString)
-				else
-					_$location.path('/lists/'+_$scope.route.listID)
+			@_$scope.filterParams = (params) ->
+				task = _$tasksmodel.getById(_$scope.route.taskID)
+				if !(angular.isUndefined(task) || task == null)
+					if task.due && task.start
+						return params
+					else if task.start
+						return params.slice(0,2)
+					else
+						return params.slice(2)
 
 			@_$scope.deleteTask = (taskID) ->
-				_$scope.closeDetails()
 				_$timeout(() ->
 					_tasksbusinesslayer.deleteTask taskID
 				,500)
 
 			@_$scope.editName = () ->
-				if _$scope.status.searchActive
-					_$location.path('/search/'+_$scope.route.searchString +
-					'/tasks/' + _$scope.route.taskID + '/edit/name')
-				else
-					_$location.path('/lists/'+_$scope.route.listID +
+				_$location.path('/lists/'+_$scope.route.listID +
 					'/tasks/' + _$scope.route.taskID + '/edit/name')
 
-			@_$scope.editDueDate = () ->
-				if _$scope.status.searchActive
-					_$location.path('/search/'+_$scope.route.searchString +
-					'/tasks/' + _$scope.route.taskID + '/edit/duedate')
-				else
+			@_$scope.editDueDate = ($event) ->
+				if $($event.currentTarget).is($($event.target).closest('.handler'))
 					_$location.path('/lists/'+_$scope.route.listID +
-					'/tasks/' + _$scope.route.taskID + '/edit/duedate')
-				_tasksbusinesslayer.initDueDate(_$scope.route.taskID)
-
-			@_$scope.editStart = () ->
-				if _$scope.status.searchActive
-					_$location.path('/search/'+_$scope.route.searchString +
-					'/tasks/' + _$scope.route.taskID + '/edit/startdate')
+						'/tasks/' + _$scope.route.taskID + '/edit/duedate')
+					_tasksbusinesslayer.initDueDate(_$scope.route.taskID)
 				else
-					_$location.path('/lists/'+_$scope.route.listID +
-					'/tasks/' + _$scope.route.taskID + '/edit/startdate')
-				_tasksbusinesslayer.initStartDate(_$scope.route.taskID)
+					return
 
-			@_$scope.editReminder = () ->
-				if _$scope.status.searchActive
-					_$location.path('/search/'+_$scope.route.searchString +
-					'/tasks/' + _$scope.route.taskID + '/edit/reminder')
+			@_$scope.editStart = ($event) ->
+				if $($event.currentTarget).is($($event.target).closest('.handler'))
+					_$location.path('/lists/'+_$scope.route.listID +
+						'/tasks/' + _$scope.route.taskID + '/edit/startdate')
+					_tasksbusinesslayer.initStartDate(_$scope.route.taskID)
 				else
-					_$location.path('/lists/'+_$scope.route.listID +
-					'/tasks/' + _$scope.route.taskID + '/edit/reminder')
-				_tasksbusinesslayer.initReminder(_$scope.route.taskID)
+					return
 
-			@_$scope.editNote = () ->
-				if _$scope.status.searchActive
-					_$location.path('/search/'+_$scope.route.searchString +
-					'/tasks/' + _$scope.route.taskID + '/edit/note')
+			@_$scope.editReminder = ($event) ->
+				if $($event.currentTarget).is($($event.target).closest('.handler'))
+					_$location.path('/lists/'+_$scope.route.listID +
+						'/tasks/' + _$scope.route.taskID + '/edit/reminder')
+					_tasksbusinesslayer.initReminder(_$scope.route.taskID)
 				else
-					_$location.path('/lists/'+_$scope.route.listID +
-					'/tasks/' + _$scope.route.taskID + '/edit/note')
+					return
 
-			@_$scope.editPercent = () ->
-				if _$scope.status.searchActive
-					_$location.path('/search/'+_$scope.route.searchString +
-					'/tasks/' + _$scope.route.taskID + '/edit/percent')
+			@_$scope.editNote = ($event) ->
+				if $($event.currentTarget).is($($event.target).closest('.handler'))
+					_$location.path('/lists/'+_$scope.route.listID +
+						'/tasks/' + _$scope.route.taskID + '/edit/note')
 				else
-					_$location.path('/lists/'+_$scope.route.listID +
-					'/tasks/' + _$scope.route.taskID + '/edit/percent')
+					return
 
-			@_$scope.endEdit = () ->
-				if _$scope.status.searchActive
-					_$location.path('/search/'+_$scope.route.searchString +
+			@_$scope.editPercent = ($event) ->
+				if $($event.currentTarget).is($($event.target).closest('.handler'))
+					_$location.path('/lists/'+_$scope.route.listID +
+						'/tasks/' + _$scope.route.taskID + '/edit/percent')
+				else
+					return
+
+			@_$scope.endEdit = ($event) ->
+				if $($event.target).closest('.end-edit').length ||
+				$($event.currentTarget).is($($event.target).closest('.handler'))
+					_$scope.resetRoute()
+				else
+					return
+
+			@_$scope.endName = ($event) ->
+				if ($event.keyCode == 13)
+					$event.preventDefault()
+					_$scope.resetRoute()
+				if($event.keyCode == 27)
+					_$scope.resetRoute()
+
+			@_$scope.resetRoute = () ->
+				_$location.path('/lists/'+_$scope.route.listID +
 					'/tasks/' + _$scope.route.taskID)
-				else
-					_$location.path('/lists/'+_$scope.route.listID +
-					'/tasks/' + _$scope.route.taskID)
-
-			@_$scope.endName = (event) ->
-				if (event.keyCode == 13)
-					event.preventDefault()
-					_$scope.endEdit()
-				if(event.keyCode == 27)
-					_$scope.endEdit()
 
 			@_$scope.deleteDueDate = () ->
 				_tasksbusinesslayer.deleteDueDate(_$scope.route.taskID)
-				_$scope.endEdit()
 
 			@_$scope.deletePercent = () ->
 				_tasksbusinesslayer.setPercentComplete(_$scope.route.taskID,0)
-				_$scope.endEdit()
 
 			@_$scope.deleteStartDate = () ->
 				_tasksbusinesslayer.deleteStartDate(_$scope.route.taskID)
-				_$scope.endEdit()
 
 			@_$scope.deleteReminder = () ->
 				_tasksbusinesslayer.deleteReminderDate(_$scope.route.taskID)
-				_$scope.endEdit()
 
 			@_$scope.toggleCompleted = (taskID) ->
 				if _$tasksmodel.completed(taskID)
@@ -326,8 +340,17 @@ $timeout, $routeParams, SettingsModel) ->
 					input:	t('tasks','Add a comment')
 				}
 
+			@_$scope.addCategory = (category, model) ->
+				_tasksbusinesslayer.addCategory(_$scope.route.taskID, category)
+				categories = _$scope.settingsmodel.getById('various').categories
+				if !(categories.indexOf(category) > -1)
+					categories.push(category)
+
+			@_$scope.removeCategory = (category, model) ->
+				_tasksbusinesslayer.removeCategory(_$scope.route.taskID, category)
+				_$scope.resetRoute()
 
 	return new DetailsController($scope, $window, TasksModel,
 		TasksBusinessLayer, $route, $location, $timeout, $routeParams,
-		SettingsModel)
+		SettingsModel, Loading)
 ]

@@ -22,15 +22,12 @@
 
 namespace OCA\Tasks\AppInfo;
 
-
 use \OCP\AppFramework\App;
-
 use \OCA\Tasks\Controller\PageController;
 use \OCA\Tasks\Controller\CollectionsController;
 use \OCA\Tasks\Controller\ListsController;
 use \OCA\Tasks\Controller\SettingsController;
 use \OCA\Tasks\Controller\TasksController;
-
 
 class Application extends App {
 
@@ -90,7 +87,7 @@ class Application extends App {
 		/**
 		 * Core
 		 */
-		$container->registerService('UserId', function($c) {
+		$container->registerService('UserId', function() {
 			return \OCP\User::getUser();
 		});	
 
@@ -101,6 +98,8 @@ class Application extends App {
 		$container->registerService('Settings', function($c) {
 			return $c->query('ServerContainer')->getConfig();
 		});
+
+		\OC::$server->getSearch()->registerProvider('OCA\Tasks\Controller\SearchController', array('apps' => array('tasks')));
 		
 	}
 

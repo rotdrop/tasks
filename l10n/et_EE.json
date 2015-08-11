@@ -68,23 +68,19 @@
     "Add an item due today in \"%s\"..." : "Lisa tänase tähtajaga kirje nimekirja \"%s\"...",
     "Add an item in \"%s\"..." : "Lisa kirje nimekirja \"%s\"...",
     "Add a current item in \"%s\"..." : "Lisa praegune kirje nimekirja \"%s\"...",
-    "%n Completed Task::%n Completed Tasks" : ["%n lõpetatud ülesanne","%n lõpetatud ülesannet"],
+    "_%n Completed Task_::_%n Completed Tasks_" : ["%n lõpetatud ülesanne","%n lõpetatud ülesannet"],
     "Set due date" : "Määra tähtaeg",
     "%s %% completed" : "%s %% valmis",
     "Remind me" : "Tuleta meelde",
     "at the end" : "lõpus",
     "at the beginning" : "alguses",
     "Set start date" : "Määra alguse kuupäev",
-    "Search..." : "Otsi..",
     "Add List..." : "Lisa nimekirja...",
     "New List" : "Uus nimekiri",
-    "Load remaining completed tasks." : "Laadi ülejäänud lõpetatud ülesanded",
-    "Settings" : "Seaded",
-    "Done" : "Valmis",
-    "General" : "Üldine",
-    "General Settings" : "Üldised seaded",
     "Start of week" : "Nädala algus",
-    "Smart Collections" : "Nutikad kollektsioonid",
-    "Visibility of Smart Collections" : "Nutikate kollektsioonide nähtavus"
+    "Visibility of Smart Collections" : "Nutikate kollektsioonide nähtavus",
+    "Load remaining completed tasks." : "Laadi ülejäänud lõpetatud ülesanded",
+    "Loading the task..." : "Ülesande laadimine...",
+    "Task not found!" : "Ülesannet ei leitud!"
 },"pluralForm" :"nplurals=2; plural=(n != 1);"
 }

@@ -1,9 +1,9 @@
 (function(angular, $, moment, undefined){
 
 /**
- * ownCloud Task App - v0.1
+ * ownCloud Task App - v0.6.0
  *
- * Copyright (c) 2014 - Raimund Schlüßler <raimund.schluessler@googlemail.com>
+ * Copyright (c) 2015 - Raimund Schlüßler <raimund.schluessler@googlemail.com>
  *
  * This file is licensed under the Affero General Public License version 3 or later.
  * See the COPYING file
@@ -12,7 +12,7 @@
 
 
 (function() {
-  angular.module('Tasks', ['OC', 'ngRoute', 'ngAnimate', 'ui.bootstrap']).config([
+  angular.module('Tasks', ['OC', 'ngRoute', 'ngAnimate', 'ui.bootstrap', 'ui.select', 'ngSanitize']).config([
     '$provide', '$routeProvider', '$interpolateProvider', function($provide, $routeProvider, $interpolateProvider) {
       var config;
       $provide.value('Config', config = {
@@ -22,42 +22,11 @@
       $routeProvider.when('/lists/:listID', {}).when('/lists/:listID/edit/:listparameter', {}).when('/lists/:listID/tasks/:taskID', {}).when('/lists/:listID/tasks/:taskID/settings', {}).when('/lists/:listID/tasks/:taskID/edit/:parameter', {}).when('/search/:searchString', {}).when('/search/:searchString/tasks/:taskID', {}).when('/search/:searchString/tasks/:taskID/edit/:parameter', {}).otherwise({
         redirectTo: '/lists/all'
       });
-      /*
-      	overwrite angular's directive ngSwitchWhen
-        	to handle ng-switch-when="value1 || value2 || value3
-        	see
-      	http://docs.angularjs.org/api/ng.directive:ngSwitch
-      */
-
-      $provide.decorator('ngSwitchWhenDirective', function($delegate) {
-        $delegate[0].compile = function(element, attrs, transclude) {
-          return function(scope, element, attr, ctrl) {
-            var casee, i, len, subCases, _results;
-            subCases = [attrs.ngSwitchWhen];
-            if (attrs.ngSwitchWhen && attrs.ngSwitchWhen.length > 0 && attrs.ngSwitchWhen.indexOf('||') !== -1) {
-              subCases = attrs.ngSwitchWhen.split('||');
-            }
-            i = 0;
-            len = subCases.length;
-            _results = [];
-            while (i < len) {
-              casee = $.trim(subCases[i++]);
-              ctrl.cases['!' + casee] = ctrl.cases['!' + casee] || [];
-              _results.push(ctrl.cases['!' + casee].push({
-                transclude: transclude,
-                element: element
-              }));
-            }
-            return _results;
-          };
-        };
-        return $delegate;
-      });
     }
   ]);
 
   angular.module('Tasks').run([
-    'Config', '$timeout', 'ListsBusinessLayer', 'TasksBusinessLayer', function(Config, $timeout, TasksBusinessLayer, ListsBusinessLayer) {
+    '$document', '$rootScope', 'Config', '$timeout', 'ListsBusinessLayer', 'TasksBusinessLayer', 'SearchBusinessLayer', function($document, $rootScope, Config, $timeout, TasksBusinessLayer, ListsBusinessLayer, SearchBusinessLayer) {
       var init, update;
       init = false;
       (update = function() {
@@ -72,6 +41,10 @@
         init = true;
         return timeOutUpdate();
       })();
+      OCA.Search.tasks = SearchBusinessLayer;
+      $document.click(function(event) {
+        $rootScope.$broadcast('documentClicked', event);
+      });
       moment.lang('details', {
         calendar: {
           lastDay: '[' + t('tasks', 'Due yesterday') + '], HH:mm',
@@ -161,12 +134,45 @@
 }).call(this);
 
 (function() {
+  angular.module('Tasks').directive('appNavigationEntryUtils', function() {
+    'use strict';
+    return {
+      restrict: 'C',
+      link: function(scope, elm) {
+        var button, menu;
+        menu = elm.siblings('.app-navigation-entry-menu');
+        button = $(elm).find('.app-navigation-entry-utils-menu-button button');
+        button.click(function() {
+          menu.toggleClass('open');
+        });
+        scope.$on('documentClicked', function(scope, event) {
+          if (event.target !== button[0]) {
+            menu.removeClass('open');
+          }
+        });
+      }
+    };
+  });
+
+}).call(this);
+
+(function() {
+  angular.module('Tasks').directive('autofocusOnInsert', function() {
+    'use strict';
+    return function(scope, elm) {
+      return elm.focus();
+    };
+  });
+
+}).call(this);
+
+(function() {
   angular.module('Tasks').directive('avatar', function() {
     return {
       restrict: 'A',
       scope: false,
       link: function(scope, elm, attr) {
-        return attr.$observe('userID', function() {
+        return attr.$observe('userid', function() {
           if (attr.userid) {
             return elm.avatar(attr.userid, attr.size);
           }
@@ -220,7 +226,7 @@
                 text = link.index ? link[0].substring(1) : link[0];
                 if (link[3] === '@') {
                   a = $compile('<a href="mailto:' + link[1] + '"\
-							stop-event="click"></a>')(scope);
+							class="handled end-edit"></a>')(scope);
                   a.text(text);
                   element.append(a);
                   continue;
@@ -229,7 +235,7 @@
                   link[1] = 'http://';
                 }
                 a = $compile('<a href="' + link[1] + link[2] + '"\
-						target="_blank" stop-event="click"></a>')(scope);
+						target="_blank" class="handled end-edit"></a>')(scope);
                 a.text(text);
                 element.append(a);
               }
@@ -353,20 +359,6 @@
 }).call(this);
 
 (function() {
-  angular.module('Tasks').directive('stopEvent', function() {
-    return {
-      restrict: 'A',
-      link: function(scope, element, attr) {
-        return element.bind(attr.stopEvent, function(e) {
-          return e.stopPropagation();
-        });
-      }
-    };
-  });
-
-}).call(this);
-
-(function() {
   angular.module('Tasks').directive('tabs', function() {
     var directive;
     return directive = {
@@ -435,10 +427,10 @@
 
 (function() {
   angular.module('Tasks').controller('AppController', [
-    '$scope', 'Persistence', '$route', 'Status', '$timeout', '$location', '$routeParams', 'Loading', '$modal', 'SettingsModel', function($scope, Persistence, $route, status, $timeout, $location, $routeParams, Loading, $modal, SettingsModel) {
+    '$scope', 'Persistence', '$route', 'Status', '$timeout', '$location', '$routeParams', 'Loading', 'SettingsModel', function($scope, Persistence, $route, status, $timeout, $location, $routeParams, Loading, SettingsModel) {
       var AppController;
       AppController = (function() {
-        function AppController(_$scope, _persistence, _$route, _$status, _$timeout, _$location, _$routeparams, _Loading, _$modal, _$settingsmodel) {
+        function AppController(_$scope, _persistence, _$route, _$status, _$timeout, _$location, _$routeparams, _Loading, _$settingsmodel) {
           var successCallback,
             _this = this;
           this._$scope = _$scope;
@@ -449,7 +441,6 @@
           this._$location = _$location;
           this._$routeparams = _$routeparams;
           this._Loading = _Loading;
-          this._$modal = _$modal;
           this._$settingsmodel = _$settingsmodel;
           this._$scope.initialized = false;
           this._$scope.status = this._$status.getStatus();
@@ -460,33 +451,29 @@
             return _this._$scope.initialized = true;
           };
           this._persistence.init().then(successCallback);
-          this._$scope.closeAll = function() {
-            if (_$scope.status.searchActive) {
-              _$location.path('/search/' + _$scope.route.searchString);
-            } else {
+          this._$scope.closeAll = function($event) {
+            if ($($event.target).closest('.close-all').length || $($event.currentTarget).is($($event.target).closest('.handler'))) {
               _$location.path('/lists/' + _$scope.route.listID);
+              _$scope.status.addingList = false;
+              _$scope.status.focusTaskInput = false;
+              _$scope.status.newListName = "";
             }
-            _$scope.status.addingList = false;
-            _$scope.status.focusTaskInput = false;
-            return _$scope.status.newListName = "";
+            if (!$($event.target).closest('.newList').length) {
+              _$scope.status.addingList = false;
+              return _$scope.status.newListName = "";
+            } else {
+
+            }
           };
           this._$scope.isLoading = function() {
             return _Loading.isLoading();
-          };
-          this._$scope.showSettings = function() {
-            return _$scope.modalInstance = _$modal.open({
-              templateUrl: 'part.settings.html',
-              controller: 'SettingsController',
-              backdrop: true,
-              windowClass: 'test'
-            });
           };
         }
 
         return AppController;
 
       })();
-      return new AppController($scope, Persistence, $route, status, $timeout, $location, $routeParams, Loading, $modal, SettingsModel);
+      return new AppController($scope, Persistence, $route, status, $timeout, $location, $routeParams, Loading, SettingsModel);
     }
   ]);
 
@@ -494,10 +481,10 @@
 
 (function() {
   angular.module('Tasks').controller('DetailsController', [
-    '$scope', '$window', 'TasksModel', 'TasksBusinessLayer', '$route', '$location', '$timeout', '$routeParams', 'SettingsModel', function($scope, $window, TasksModel, TasksBusinessLayer, $route, $location, $timeout, $routeParams, SettingsModel) {
+    '$scope', '$window', 'TasksModel', 'TasksBusinessLayer', '$route', '$location', '$timeout', '$routeParams', 'SettingsModel', 'Loading', function($scope, $window, TasksModel, TasksBusinessLayer, $route, $location, $timeout, $routeParams, SettingsModel, Loading) {
       var DetailsController;
       DetailsController = (function() {
-        function DetailsController(_$scope, _$window, _$tasksmodel, _tasksbusinesslayer, _$route, _$location, _$timeout, _$routeparams, _$settingsmodel) {
+        function DetailsController(_$scope, _$window, _$tasksmodel, _tasksbusinesslayer, _$route, _$location, _$timeout, _$routeparams, _$settingsmodel, _Loading) {
           this._$scope = _$scope;
           this._$window = _$window;
           this._$tasksmodel = _$tasksmodel;
@@ -507,15 +494,28 @@
           this._$timeout = _$timeout;
           this._$routeparams = _$routeparams;
           this._$settingsmodel = _$settingsmodel;
+          this._Loading = _Loading;
           this._$scope.task = _$tasksmodel.getById(_$scope.route.taskID);
+          this._$scope.found = true;
           this._$scope.$on('$routeChangeSuccess', function() {
-            var task;
+            var task,
+              _this = this;
             task = _$tasksmodel.getById(_$scope.route.taskID);
             if (!(angular.isUndefined(task) || task === null)) {
-              return _$scope.task = task;
+              _$scope.task = task;
+              return _$scope.found = true;
+            } else if (_$scope.route.taskID !== void 0) {
+              _$scope.found = false;
+              return _tasksbusinesslayer.getTask(_$scope.route.taskID, function(data) {
+                return _$scope.loadTask(_$scope.route.taskID);
+              });
             }
           });
           this._$scope.settingsmodel = this._$settingsmodel;
+          this._$scope.settingsmodel.add({
+            'id': 'various',
+            'categories': []
+          });
           this._$scope.isAddingComment = false;
           this._$scope.timers = [];
           this._$scope.durations = [
@@ -541,128 +541,137 @@
               id: 'second'
             }
           ];
-          this._$scope.params = function(task) {
-            var params;
-            params = [
-              {
-                name: t('tasks', 'before beginning'),
-                invert: true,
-                related: 'START',
-                id: "10"
-              }, {
-                name: t('tasks', 'after beginning'),
-                invert: false,
-                related: 'START',
-                id: "00"
-              }, {
-                name: t('tasks', 'before end'),
-                invert: true,
-                related: 'END',
-                id: "11"
-              }, {
-                name: t('tasks', 'after end'),
-                invert: false,
-                related: 'END',
-                id: "01"
-              }
-            ];
-            if (task.due && task.start) {
-              return params;
-            } else if (task.start) {
-              return params.slice(0, 2);
-            } else {
-              return params.slice(2);
+          this._$scope.loadTask = function(taskID) {
+            var task;
+            task = _$tasksmodel.getById(_$scope.route.taskID);
+            if (!(angular.isUndefined(task) || task === null)) {
+              _$scope.task = task;
+              return _$scope.found = true;
             }
           };
-          this._$scope.closeDetails = function() {
-            if (_$scope.status.searchActive) {
-              return _$location.path('/search/' + _$scope.route.searchString);
+          this._$scope.TaskState = function() {
+            if (_$scope.found) {
+              return 'found';
             } else {
-              return _$location.path('/lists/' + _$scope.route.listID);
+              if (_Loading.isLoading()) {
+                return 'loading';
+              } else {
+                return null;
+              }
+            }
+          };
+          this._$scope.params = [
+            {
+              name: t('tasks', 'before beginning'),
+              invert: true,
+              related: 'START',
+              id: "10"
+            }, {
+              name: t('tasks', 'after beginning'),
+              invert: false,
+              related: 'START',
+              id: "00"
+            }, {
+              name: t('tasks', 'before end'),
+              invert: true,
+              related: 'END',
+              id: "11"
+            }, {
+              name: t('tasks', 'after end'),
+              invert: false,
+              related: 'END',
+              id: "01"
+            }
+          ];
+          this._$scope.filterParams = function(params) {
+            var task;
+            task = _$tasksmodel.getById(_$scope.route.taskID);
+            if (!(angular.isUndefined(task) || task === null)) {
+              if (task.due && task.start) {
+                return params;
+              } else if (task.start) {
+                return params.slice(0, 2);
+              } else {
+                return params.slice(2);
+              }
             }
           };
           this._$scope.deleteTask = function(taskID) {
-            _$scope.closeDetails();
             return _$timeout(function() {
               return _tasksbusinesslayer.deleteTask(taskID);
             }, 500);
           };
           this._$scope.editName = function() {
-            if (_$scope.status.searchActive) {
-              return _$location.path('/search/' + _$scope.route.searchString + '/tasks/' + _$scope.route.taskID + '/edit/name');
-            } else {
-              return _$location.path('/lists/' + _$scope.route.listID + '/tasks/' + _$scope.route.taskID + '/edit/name');
-            }
+            return _$location.path('/lists/' + _$scope.route.listID + '/tasks/' + _$scope.route.taskID + '/edit/name');
           };
-          this._$scope.editDueDate = function() {
-            if (_$scope.status.searchActive) {
-              _$location.path('/search/' + _$scope.route.searchString + '/tasks/' + _$scope.route.taskID + '/edit/duedate');
-            } else {
+          this._$scope.editDueDate = function($event) {
+            if ($($event.currentTarget).is($($event.target).closest('.handler'))) {
               _$location.path('/lists/' + _$scope.route.listID + '/tasks/' + _$scope.route.taskID + '/edit/duedate');
-            }
-            return _tasksbusinesslayer.initDueDate(_$scope.route.taskID);
-          };
-          this._$scope.editStart = function() {
-            if (_$scope.status.searchActive) {
-              _$location.path('/search/' + _$scope.route.searchString + '/tasks/' + _$scope.route.taskID + '/edit/startdate');
+              return _tasksbusinesslayer.initDueDate(_$scope.route.taskID);
             } else {
+
+            }
+          };
+          this._$scope.editStart = function($event) {
+            if ($($event.currentTarget).is($($event.target).closest('.handler'))) {
               _$location.path('/lists/' + _$scope.route.listID + '/tasks/' + _$scope.route.taskID + '/edit/startdate');
-            }
-            return _tasksbusinesslayer.initStartDate(_$scope.route.taskID);
-          };
-          this._$scope.editReminder = function() {
-            if (_$scope.status.searchActive) {
-              _$location.path('/search/' + _$scope.route.searchString + '/tasks/' + _$scope.route.taskID + '/edit/reminder');
+              return _tasksbusinesslayer.initStartDate(_$scope.route.taskID);
             } else {
+
+            }
+          };
+          this._$scope.editReminder = function($event) {
+            if ($($event.currentTarget).is($($event.target).closest('.handler'))) {
               _$location.path('/lists/' + _$scope.route.listID + '/tasks/' + _$scope.route.taskID + '/edit/reminder');
-            }
-            return _tasksbusinesslayer.initReminder(_$scope.route.taskID);
-          };
-          this._$scope.editNote = function() {
-            if (_$scope.status.searchActive) {
-              return _$location.path('/search/' + _$scope.route.searchString + '/tasks/' + _$scope.route.taskID + '/edit/note');
+              return _tasksbusinesslayer.initReminder(_$scope.route.taskID);
             } else {
+
+            }
+          };
+          this._$scope.editNote = function($event) {
+            if ($($event.currentTarget).is($($event.target).closest('.handler'))) {
               return _$location.path('/lists/' + _$scope.route.listID + '/tasks/' + _$scope.route.taskID + '/edit/note');
+            } else {
+
             }
           };
-          this._$scope.editPercent = function() {
-            if (_$scope.status.searchActive) {
-              return _$location.path('/search/' + _$scope.route.searchString + '/tasks/' + _$scope.route.taskID + '/edit/percent');
-            } else {
+          this._$scope.editPercent = function($event) {
+            if ($($event.currentTarget).is($($event.target).closest('.handler'))) {
               return _$location.path('/lists/' + _$scope.route.listID + '/tasks/' + _$scope.route.taskID + '/edit/percent');
-            }
-          };
-          this._$scope.endEdit = function() {
-            if (_$scope.status.searchActive) {
-              return _$location.path('/search/' + _$scope.route.searchString + '/tasks/' + _$scope.route.taskID);
             } else {
-              return _$location.path('/lists/' + _$scope.route.listID + '/tasks/' + _$scope.route.taskID);
+
             }
           };
-          this._$scope.endName = function(event) {
-            if (event.keyCode === 13) {
-              event.preventDefault();
-              _$scope.endEdit();
+          this._$scope.endEdit = function($event) {
+            if ($($event.target).closest('.end-edit').length || $($event.currentTarget).is($($event.target).closest('.handler'))) {
+              return _$scope.resetRoute();
+            } else {
+
             }
-            if (event.keyCode === 27) {
-              return _$scope.endEdit();
+          };
+          this._$scope.endName = function($event) {
+            if ($event.keyCode === 13) {
+              $event.preventDefault();
+              _$scope.resetRoute();
             }
+            if ($event.keyCode === 27) {
+              return _$scope.resetRoute();
+            }
+          };
+          this._$scope.resetRoute = function() {
+            return _$location.path('/lists/' + _$scope.route.listID + '/tasks/' + _$scope.route.taskID);
           };
           this._$scope.deleteDueDate = function() {
-            _tasksbusinesslayer.deleteDueDate(_$scope.route.taskID);
-            return _$scope.endEdit();
+            return _tasksbusinesslayer.deleteDueDate(_$scope.route.taskID);
           };
           this._$scope.deletePercent = function() {
-            _tasksbusinesslayer.setPercentComplete(_$scope.route.taskID, 0);
-            return _$scope.endEdit();
+            return _tasksbusinesslayer.setPercentComplete(_$scope.route.taskID, 0);
           };
           this._$scope.deleteStartDate = function() {
-            _tasksbusinesslayer.deleteStartDate(_$scope.route.taskID);
-            return _$scope.endEdit();
+            return _tasksbusinesslayer.deleteStartDate(_$scope.route.taskID);
           };
           this._$scope.deleteReminder = function() {
-            _tasksbusinesslayer.deleteReminderDate(_$scope.route.taskID);
-            return _$scope.endEdit();
+            return _tasksbusinesslayer.deleteReminderDate(_$scope.route.taskID);
           };
           this._$scope.toggleCompleted = function(taskID) {
             if (_$tasksmodel.completed(taskID)) {
@@ -804,12 +813,24 @@
               input: t('tasks', 'Add a comment')
             };
           };
+          this._$scope.addCategory = function(category, model) {
+            var categories;
+            _tasksbusinesslayer.addCategory(_$scope.route.taskID, category);
+            categories = _$scope.settingsmodel.getById('various').categories;
+            if (!(categories.indexOf(category) > -1)) {
+              return categories.push(category);
+            }
+          };
+          this._$scope.removeCategory = function(category, model) {
+            _tasksbusinesslayer.removeCategory(_$scope.route.taskID, category);
+            return _$scope.resetRoute();
+          };
         }
 
         return DetailsController;
 
       })();
-      return new DetailsController($scope, $window, TasksModel, TasksBusinessLayer, $route, $location, $timeout, $routeParams, SettingsModel);
+      return new DetailsController($scope, $window, TasksModel, TasksBusinessLayer, $route, $location, $timeout, $routeParams, SettingsModel, Loading);
     }
   ]);
 
@@ -817,10 +838,10 @@
 
 (function() {
   angular.module('Tasks').controller('ListController', [
-    '$scope', '$window', '$routeParams', 'ListsModel', 'TasksBusinessLayer', 'CollectionsModel', 'ListsBusinessLayer', '$location', function($scope, $window, $routeParams, ListsModel, TasksBusinessLayer, CollectionsModel, ListsBusinessLayer, $location) {
+    '$scope', '$window', '$routeParams', 'ListsModel', 'TasksBusinessLayer', 'CollectionsModel', 'ListsBusinessLayer', '$location', 'SearchBusinessLayer', function($scope, $window, $routeParams, ListsModel, TasksBusinessLayer, CollectionsModel, ListsBusinessLayer, $location, SearchBusinessLayer) {
       var ListController;
       ListController = (function() {
-        function ListController(_$scope, _$window, _$routeParams, _$listsmodel, _$tasksbusinesslayer, _$collectionsmodel, _$listsbusinesslayer, $location) {
+        function ListController(_$scope, _$window, _$routeParams, _$listsmodel, _$tasksbusinesslayer, _$collectionsmodel, _$listsbusinesslayer, $location, _$searchbusinesslayer) {
           this._$scope = _$scope;
           this._$window = _$window;
           this._$routeParams = _$routeParams;
@@ -829,6 +850,7 @@
           this._$collectionsmodel = _$collectionsmodel;
           this._$listsbusinesslayer = _$listsbusinesslayer;
           this.$location = $location;
+          this._$searchbusinesslayer = _$searchbusinesslayer;
           this._$scope.collections = this._$collectionsmodel.getAll();
           this._$scope.lists = this._$listsmodel.getAll();
           this._$scope.TasksBusinessLayer = this._$tasksbusinesslayer;
@@ -842,6 +864,7 @@
             }
           };
           this._$scope.startAddingList = function() {
+            $location.path('/lists/' + _$scope.route.listID);
             return _$scope.status.addingList = true;
           };
           this._$scope.endAddingList = function() {
@@ -885,6 +908,7 @@
             }
           };
           this._$scope.editName = function(listID) {
+            _$scope.status.addingList = false;
             _$scope.status.listNameBackup = _$listsmodel.getById(listID).displayname;
             return $location.path('/lists/' + _$scope.route.listID + '/edit/name');
           };
@@ -922,7 +946,9 @@
             return _$listsbusinesslayer.setListName(listID(listName));
           };
           this._$scope.getCollectionCount = function(collectionID) {
-            return _$collectionsmodel.getCount(collectionID);
+            var filter;
+            filter = _$searchbusinesslayer.getFilter();
+            return _$collectionsmodel.getCount(collectionID, filter);
           };
           this._$scope.hideCollection = function(collectionID) {
             var collection;
@@ -937,14 +963,18 @@
             }
           };
           this._$scope.getCollectionString = function(collectionID) {
+            var filter;
             if (collectionID !== 'completed') {
-              return _$collectionsmodel.getCount(collectionID);
+              filter = _$searchbusinesslayer.getFilter();
+              return _$collectionsmodel.getCount(collectionID, filter);
             } else {
               return '';
             }
           };
           this._$scope.getListCount = function(listID, type) {
-            return _$listsmodel.getCount(listID, type);
+            var filter;
+            filter = _$searchbusinesslayer.getFilter();
+            return _$listsmodel.getCount(listID, type, filter);
           };
           this._$scope.showDelete = function(listID) {
             var _ref;
@@ -961,54 +991,7 @@
         return ListController;
 
       })();
-      return new ListController($scope, $window, $routeParams, ListsModel, TasksBusinessLayer, CollectionsModel, ListsBusinessLayer, $location);
-    }
-  ]);
-
-}).call(this);
-
-(function() {
-  angular.module('Tasks').controller('SearchController', [
-    '$scope', '$window', 'Status', '$location', function($scope, $window, Status, $location) {
-      var SearchController;
-      SearchController = (function() {
-        function SearchController(_$scope, _$window, _$status, _$location) {
-          var _this = this;
-          this._$scope = _$scope;
-          this._$window = _$window;
-          this._$status = _$status;
-          this._$location = _$location;
-          this._$scope.searchString = '';
-          this._$scope.searchBuffer = '/lists/all';
-          this._$scope.status = this._$status.getStatus();
-          this._$scope.$on('$routeChangeSuccess', function() {
-            if (_$scope.route.searchString !== void 0) {
-              return _$scope.status.searchActive = true;
-            }
-          });
-          this._$scope.openSearch = function() {
-            _$scope.searchBuffer = _$location.path();
-            _$location.path('/search/');
-            return _$scope.status.searchActive = true;
-          };
-          this._$scope.closeSearch = function() {
-            _$scope.searchString = '';
-            _$location.path(_$scope.searchBuffer);
-            return _$scope.status.searchActive = false;
-          };
-          this._$scope.trySearch = function(event) {
-            if (event.keyCode === 27) {
-              return _$scope.closeSearch();
-            } else {
-              return _$location.path('/search/' + _$scope.searchString);
-            }
-          };
-        }
-
-        return SearchController;
-
-      })();
-      return new SearchController($scope, $window, Status, $location);
+      return new ListController($scope, $window, $routeParams, ListsModel, TasksBusinessLayer, CollectionsModel, ListsBusinessLayer, $location, SearchBusinessLayer);
     }
   ]);
 
@@ -1016,16 +999,15 @@
 
 (function() {
   angular.module('Tasks').controller('SettingsController', [
-    '$scope', '$window', 'Status', '$location', '$modalInstance', 'CollectionsModel', 'SettingsBusinessLayer', 'SettingsModel', function($scope, $window, Status, $location, $modalInstance, CollectionsModel, SettingsBusinessLayer, SettingsModel) {
+    '$scope', '$window', 'Status', '$location', 'CollectionsModel', 'SettingsBusinessLayer', 'SettingsModel', function($scope, $window, Status, $location, CollectionsModel, SettingsBusinessLayer, SettingsModel) {
       var SettingsController;
       SettingsController = (function() {
-        function SettingsController(_$scope, _$window, _$status, _$location, _$modalInstance, _$collectionsmodel, _$settingsbusinesslayer, _$settingsmodel) {
+        function SettingsController(_$scope, _$window, _$status, _$location, _$collectionsmodel, _$settingsbusinesslayer, _$settingsmodel) {
           var _this = this;
           this._$scope = _$scope;
           this._$window = _$window;
           this._$status = _$status;
           this._$location = _$location;
-          this._$modalInstance = _$modalInstance;
           this._$collectionsmodel = _$collectionsmodel;
           this._$settingsbusinesslayer = _$settingsbusinesslayer;
           this._$settingsmodel = _$settingsmodel;
@@ -1068,9 +1050,6 @@
               name: t('tasks', 'Saturday')
             }
           ];
-          this._$scope.ok = function() {
-            return $modalInstance.close();
-          };
           this._$scope.setVisibility = function(collectionID) {
             var collection;
             collection = _$collectionsmodel.getById(collectionID);
@@ -1084,7 +1063,7 @@
         return SettingsController;
 
       })();
-      return new SettingsController($scope, $window, Status, $location, $modalInstance, CollectionsModel, SettingsBusinessLayer, SettingsModel);
+      return new SettingsController($scope, $window, Status, $location, CollectionsModel, SettingsBusinessLayer, SettingsModel);
     }
   ]);
 
@@ -1092,10 +1071,11 @@
 
 (function() {
   angular.module('Tasks').controller('TasksController', [
-    '$scope', '$window', '$routeParams', 'TasksModel', 'ListsModel', 'CollectionsModel', 'TasksBusinessLayer', '$location', 'SettingsBusinessLayer', function($scope, $window, $routeParams, TasksModel, ListsModel, CollectionsModel, TasksBusinessLayer, $location, SettingsBusinessLayer) {
+    '$scope', '$window', '$routeParams', 'TasksModel', 'ListsModel', 'CollectionsModel', 'TasksBusinessLayer', '$location', 'SettingsBusinessLayer', 'SearchBusinessLayer', function($scope, $window, $routeParams, TasksModel, ListsModel, CollectionsModel, TasksBusinessLayer, $location, SettingsBusinessLayer, SearchBusinessLayer) {
       var TasksController;
       TasksController = (function() {
-        function TasksController(_$scope, _$window, _$routeParams, _$tasksmodel, _$listsmodel, _$collectionsmodel, _tasksbusinesslayer, $location, _settingsbusinesslayer) {
+        function TasksController(_$scope, _$window, _$routeParams, _$tasksmodel, _$listsmodel, _$collectionsmodel, _tasksbusinesslayer, $location, _settingsbusinesslayer, _searchbusinesslayer) {
+          var _this = this;
           this._$scope = _$scope;
           this._$window = _$window;
           this._$routeParams = _$routeParams;
@@ -1105,6 +1085,7 @@
           this._tasksbusinesslayer = _tasksbusinesslayer;
           this.$location = $location;
           this._settingsbusinesslayer = _settingsbusinesslayer;
+          this._searchbusinesslayer = _searchbusinesslayer;
           this._$scope.tasks = this._$tasksmodel.getAll();
           this._$scope.lists = this._$listsmodel.getAll();
           this._$scope.days = [0, 1, 2, 3, 4, 5, 6];
@@ -1136,7 +1117,7 @@
           };
           this._$scope.showInput = function() {
             var _ref;
-            if (((_ref = _$scope.route.listID) === 'completed' || _ref === 'week') || _$scope.status.searchActive) {
+            if ((_ref = _$scope.route.listID) === 'completed' || _ref === 'week') {
               return false;
             } else {
               return true;
@@ -1146,14 +1127,9 @@
             return _$scope.status.focusTaskInput = true;
           };
           this._$scope.openDetails = function(id) {
-            var listID, searchString;
-            if (_$scope.status.searchActive) {
-              searchString = _$scope.route.searchString;
-              return $location.path('/search/' + searchString + '/tasks/' + id);
-            } else {
-              listID = _$scope.route.listID;
-              return $location.path('/lists/' + listID + '/tasks/' + id);
-            }
+            var listID;
+            listID = _$scope.route.listID;
+            return $location.path('/lists/' + listID + '/tasks/' + id);
           };
           this._$scope.toggleCompleted = function(taskID) {
             if (_$tasksmodel.completed(taskID)) {
@@ -1173,9 +1149,16 @@
           this._$scope.toggleHidden = function() {
             return _settingsbusinesslayer.toggle('various', 'showHidden');
           };
-          this._$scope.filterTasks = function() {
+          this._$scope.filterTasks = function(task, filter) {
             return function(task) {
-              return _$tasksmodel.filterTasks(task, _$scope.route.listID);
+              return _$tasksmodel.filterTasks(task, filter);
+            };
+          };
+          this._$scope.filterTasksByString = function(task) {
+            return function(task) {
+              var filter;
+              filter = _searchbusinesslayer.getFilter();
+              return _$tasksmodel.filterTasksByString(task, filter);
             };
           };
           this._$scope.dayHasEntry = function() {
@@ -1205,21 +1188,20 @@
             }
             return ret;
           };
-          this._$scope.filterTasksByCalendar = function(task, listID) {
-            return function(task) {
-              return '' + task.calendarid === '' + listID;
-            };
-          };
           this._$scope.filterLists = function() {
             return function(list) {
               return _$scope.getCount(list.id, _$scope.route.listID);
             };
           };
           this._$scope.getCount = function(listID, type) {
-            return _$listsmodel.getCount(listID, type);
+            var filter;
+            filter = _searchbusinesslayer.getFilter();
+            return _$listsmodel.getCount(listID, type, filter);
           };
           this._$scope.getCountString = function(listID, type) {
-            return n('tasks', '%n Completed Task', '%n Completed Tasks', _$listsmodel.getCount(listID, type));
+            var filter;
+            filter = _searchbusinesslayer.getFilter();
+            return n('tasks', '%n Completed Task', '%n Completed Tasks', _$listsmodel.getCount(listID, type, filter));
           };
           this._$scope.addTask = function(taskName) {
             var task, _ref,
@@ -1288,7 +1270,7 @@
         return TasksController;
 
       })();
-      return new TasksController($scope, $window, $routeParams, TasksModel, ListsModel, CollectionsModel, TasksBusinessLayer, $location, SettingsBusinessLayer);
+      return new TasksController($scope, $window, $routeParams, TasksModel, ListsModel, CollectionsModel, TasksBusinessLayer, $location, SettingsBusinessLayer, SearchBusinessLayer);
     }
   ]);
 
@@ -1351,6 +1333,90 @@
 
       })();
       return new ListsBusinessLayer(ListsModel, Persistence, TasksModel);
+    }
+  ]);
+
+}).call(this);
+
+(function() {
+  var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
+
+  angular.module('Tasks').factory('SearchBusinessLayer', [
+    'ListsModel', 'Persistence', 'TasksModel', '$rootScope', '$routeParams', '$location', function(ListsModel, Persistence, TasksModel, $rootScope, $routeParams, $location) {
+      var SearchBusinessLayer;
+      SearchBusinessLayer = (function() {
+        function SearchBusinessLayer(_$listsmodel, _persistence, _$tasksmodel, _$rootScope, _$routeparams, _$location) {
+          this._$listsmodel = _$listsmodel;
+          this._persistence = _persistence;
+          this._$tasksmodel = _$tasksmodel;
+          this._$rootScope = _$rootScope;
+          this._$routeparams = _$routeparams;
+          this._$location = _$location;
+          this.getFilter = __bind(this.getFilter, this);
+          this.setFilter = __bind(this.setFilter, this);
+          this.attach = __bind(this.attach, this);
+          this.initialize();
+          this._$searchString = '';
+        }
+
+        SearchBusinessLayer.prototype.attach = function(search) {
+          var _this = this;
+          search.setFilter('tasks', function(query) {
+            return _this._$rootScope.$apply(_this.setFilter(query));
+          });
+          search.setRenderer('task', this.renderTaskResult.bind(this));
+          return search.setHandler('task', this.handleTaskClick.bind(this));
+        };
+
+        SearchBusinessLayer.prototype.setFilter = function(query) {
+          return this._$searchString = query;
+        };
+
+        SearchBusinessLayer.prototype.getFilter = function() {
+          return this._$searchString;
+        };
+
+        SearchBusinessLayer.prototype.initialize = function() {
+          var _this = this;
+          this.handleTaskClick = function($row, result, event) {
+            return _this._$location.path('/lists/' + result.calendarid + '/tasks/' + result.id);
+          };
+          this.renderTaskResult = function($row, result) {
+            var $template;
+            if (!_this._$tasksmodel.filterTasks(result, _this._$routeparams.listID) || !_this._$tasksmodel.isLoaded(result)) {
+              $template = $('div.task-item.template');
+              $template = $template.clone();
+              $row = $('<tr class="result"></tr>').append($template.removeClass('template'));
+              $row.data('result', result);
+              $row.find('span.title').text(result.name);
+              if (result.starred) {
+                $row.find('span.task-star').addClass('task-starred');
+              }
+              if (result.completed) {
+                $row.find('div.task-item').addClass('done');
+                $row.find('span.task-checkbox').addClass('task-checked');
+              }
+              if (result.complete) {
+                $row.find('div.percentdone').css({
+                  'width': result.complete + '%',
+                  'background-color': '' + _this._$listsmodel.getColor(result.calendarid)
+                });
+              }
+              if (result.note) {
+                $row.find('div.title-wrapper').addClass('attachment');
+              }
+              return $row;
+            } else {
+              return null;
+            }
+          };
+          return OC.Plugins.register('OCA.Search', this);
+        };
+
+        return SearchBusinessLayer;
+
+      })();
+      return new SearchBusinessLayer(ListsModel, Persistence, TasksModel, $rootScope, $routeParams, $location);
     }
   ]);
 
@@ -1427,6 +1493,17 @@
             }
           };
           return this._persistence.addTask(task, success);
+        };
+
+        TasksBusinessLayer.prototype.getTask = function(taskID, onSuccess, onFailure) {
+          if (onSuccess == null) {
+            onSuccess = null;
+          }
+          if (onFailure == null) {
+            onFailure = null;
+          }
+          onSuccess || (onSuccess = function() {});
+          return this._persistence.getTask(taskID, onSuccess, true);
         };
 
         TasksBusinessLayer.prototype.starTask = function(taskID) {
@@ -1583,8 +1660,8 @@
               task.reminder.type = 'DATE-TIME';
               task.reminder.date = moment().startOf('hour').add('h', 1).format('YYYYMMDDTHHmmss');
             }
+            return this.setReminder(taskID);
           }
-          return this.setReminder(taskID);
         };
 
         TasksBusinessLayer.prototype.setReminderDate = function(taskID, date, type) {
@@ -1827,6 +1904,14 @@
           return this._persistence.getTasks('completed', listID);
         };
 
+        TasksBusinessLayer.prototype.addCategory = function(taskID, category) {
+          return this._persistence.addCategory(taskID, category);
+        };
+
+        TasksBusinessLayer.prototype.removeCategory = function(taskID, category) {
+          return this._persistence.removeCategory(taskID, category);
+        };
+
         return TasksBusinessLayer;
 
       })();
@@ -1862,13 +1947,16 @@
           }
         };
 
-        CollectionsModel.prototype.getCount = function(collectionID) {
+        CollectionsModel.prototype.getCount = function(collectionID, filter) {
           var count, task, tasks, _i, _len;
+          if (filter == null) {
+            filter = '';
+          }
           count = 0;
           tasks = this._$tasksmodel.getAll();
           for (_i = 0, _len = tasks.length; _i < _len; _i++) {
             task = tasks[_i];
-            count += this._$tasksmodel.filterTasks(task, collectionID);
+            count += this._$tasksmodel.filterTasks(task, collectionID) && this._$tasksmodel.filterTasksByString(task, filter);
           }
           return count;
         };
@@ -1993,15 +2081,18 @@
           return ret;
         };
 
-        ListsModel.prototype.getCount = function(listID, collectionID) {
+        ListsModel.prototype.getCount = function(listID, collectionID, filter) {
           var count, task, tasks, _i, _len;
+          if (filter == null) {
+            filter = '';
+          }
           count = 0;
           tasks = this._$tasksmodel.getAll();
           for (_i = 0, _len = tasks.length; _i < _len; _i++) {
             task = tasks[_i];
-            count += this._$tasksmodel.filterTasks(task, collectionID) && task.calendarid === listID;
+            count += this._$tasksmodel.filterTasks(task, collectionID) && task.calendarid === listID && this._$tasksmodel.filterTasksByString(task, filter);
           }
-          if (collectionID === 'completed') {
+          if (collectionID === 'completed' && filter === '') {
             count += this.notLoaded(listID);
           }
           return count;
@@ -2066,6 +2157,8 @@
           this._nameCache[data.displayname] = data;
           if (angular.isDefined(data.id)) {
             return SettingsModel.__super__.add.call(this, data, clearCache);
+          } else {
+            return this._data.push(data);
           }
         };
 
@@ -2086,7 +2179,8 @@
 
 (function() {
   var __hasProp = {}.hasOwnProperty,
-    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   angular.module('Tasks').factory('TasksModel', [
     '_Model', '_EqualQuery', 'Utils', function(_Model, _EqualQuery, Utils) {
@@ -2222,8 +2316,16 @@
           return false;
         };
 
-        TasksModel.prototype.filterTasks = function(task, collectionID) {
-          switch (collectionID) {
+        TasksModel.prototype.isLoaded = function(task) {
+          if (this.getById(task.id)) {
+            return true;
+          } else {
+            return false;
+          }
+        };
+
+        TasksModel.prototype.filterTasks = function(task, filter) {
+          switch (filter) {
             case 'completed':
               return task.completed === true;
             case 'all':
@@ -2236,7 +2338,40 @@
               return task.completed === false && (this.today(task.start) || this.today(task.due));
             case 'week':
               return task.completed === false && (this.week(task.start) || this.week(task.due));
+            default:
+              return '' + task.calendarid === '' + filter;
           }
+        };
+
+        TasksModel.prototype.filterTasksByString = function(task, filter) {
+          var category, comment, key, keys, value, _i, _j, _len, _len1, _ref, _ref1;
+          keys = ['name', 'note', 'location', 'categories', 'comments'];
+          filter = filter.toLowerCase();
+          for (key in task) {
+            value = task[key];
+            if (__indexOf.call(keys, key) >= 0) {
+              if (key === 'comments') {
+                _ref = task.comments;
+                for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+                  comment = _ref[_i];
+                  if (comment.comment.toLowerCase().indexOf(filter) !== -1) {
+                    return true;
+                  }
+                }
+              } else if (key === 'categories') {
+                _ref1 = task.categories;
+                for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+                  category = _ref1[_j];
+                  if (category.toLowerCase().indexOf(filter) !== -1) {
+                    return true;
+                  }
+                }
+              } else if (value.toLowerCase().indexOf(filter) !== -1) {
+                return true;
+              }
+            }
+          }
+          return false;
         };
 
         TasksModel.prototype.starred = function(taskID) {
@@ -2618,6 +2753,38 @@
           return this._request.get('/apps/tasks/tasks/{type}/{listID}', params);
         };
 
+        Persistence.prototype.getTask = function(taskID, onSuccess, showLoading) {
+          var failureCallbackWrapper, params, successCallbackWrapper,
+            _this = this;
+          if (showLoading == null) {
+            showLoading = true;
+          }
+          onSuccess || (onSuccess = function() {});
+          if (showLoading) {
+            this._Loading.increase();
+            successCallbackWrapper = function() {
+              onSuccess();
+              return _this._Loading.decrease();
+            };
+            failureCallbackWrapper = function() {
+              return _this._Loading.decrease();
+            };
+          } else {
+            successCallbackWrapper = function() {
+              return onSuccess();
+            };
+            failureCallbackWrapper = function() {};
+          }
+          params = {
+            onSuccess: successCallbackWrapper,
+            onFailure: failureCallbackWrapper,
+            routeParams: {
+              taskID: taskID
+            }
+          };
+          return this._request.get('/apps/tasks/task/{taskID}', params);
+        };
+
         Persistence.prototype.starTask = function(taskID) {
           var params;
           params = {
@@ -2840,6 +3007,32 @@
 			{commentID}/delete', params);
         };
 
+        Persistence.prototype.addCategory = function(taskID, category) {
+          var params;
+          params = {
+            routeParams: {
+              taskID: taskID
+            },
+            data: {
+              category: category
+            }
+          };
+          return this._request.post('/apps/tasks/tasks/{taskID}/category/add', params);
+        };
+
+        Persistence.prototype.removeCategory = function(taskID, category) {
+          var params;
+          params = {
+            routeParams: {
+              taskID: taskID
+            },
+            data: {
+              category: category
+            }
+          };
+          return this._request.post('/apps/tasks/tasks/{taskID}/category/remove', params);
+        };
+
         return Persistence;
 
       })();
@@ -2851,8 +3044,8 @@
 
 (function() {
   angular.module('Tasks').factory('Request', [
-    '_Request', '$http', 'Publisher', 'Router', function(_Request, $http, Publisher, Router) {
-      return new _Request($http, Publisher, Router);
+    '_Request', '$http', 'Publisher', function(_Request, $http, Publisher) {
+      return new _Request($http, Publisher);
     }
   ]);
 
@@ -2883,7 +3076,6 @@
       Status = (function() {
         function Status() {
           this._$status = {
-            searchActive: false,
             addingList: false,
             focusTaskInput: false
           };

@@ -69,22 +69,16 @@ $TRANSLATIONS = array(
 "Add an item due today in \"%s\"..." => "Tambah item jatuh tempo hari ini dalam \"%s\"...",
 "Add an item in \"%s\"..." => "Tambah item dalam \"%s\"...",
 "Add a current item in \"%s\"..." => "Tambah item terbaru dalam \"%s\"...",
-"%n Completed Task::%n Completed Tasks" => array("%n Tugas Diselesaikan"),
+"_%n Completed Task_::_%n Completed Tasks_" => array("%n Tugas Diselesaikan"),
 "Set due date" => "Atur tanggal jatuh tempo",
 "%s %% completed" => "%s %% selesai",
 "Remind me" => "Ingatkan saya",
 "at the end" => "di akhir",
 "at the beginning" => "di awal",
 "Set start date" => "Atur tanggal mulai",
-"Search..." => "Penelusuran...",
 "Add List..." => "Tambah Daftar...",
 "New List" => "Daftar Baru",
-"Settings" => "Pengaturan",
-"Done" => "Selesai",
-"General" => "Umum",
-"General Settings" => "Pengaturan Umum",
 "Start of week" => "Mulai minggu",
-"Smart Collections" => "Koleksi Cerdas",
 "Visibility of Smart Collections" => "Visibilitas Koleksi Cerdas"
 );
 $PLURAL_FORMS = "nplurals=1; plural=0;";

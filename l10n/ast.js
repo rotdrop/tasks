@@ -64,7 +64,6 @@ OC.L10N.register(
     "Thursday" : "Xueves",
     "Friday" : "Vienres",
     "Saturday" : "Sábadu",
-    "%n Completed Task::%n Completed Tasks" : ["",""],
     "Settings" : "Axustes",
     "General" : "Xeneral",
     "General Settings" : "Axustes xenerales"

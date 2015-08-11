@@ -69,22 +69,17 @@ $TRANSLATIONS = array(
 "Add an item due today in \"%s\"..." => "Gehitu gertaera bat gaur \"%s\" epemuga duena...",
 "Add an item in \"%s\"..." => "Gehitu gertaera bat \"%s\"-an...",
 "Add a current item in \"%s\"..." => "Gehitu uneko gertaera bat \"%s\"-an",
-"%n Completed Task::%n Completed Tasks" => array("Zeregin bete %n","%n Zeregin Beteak"),
+"_%n Completed Task_::_%n Completed Tasks_" => array("Zeregin bete %n","%n Zeregin Beteak"),
 "Set due date" => "Ezarri epemuga",
 "%s %% completed" => "%% %s  betea",
 "Remind me" => "Gogorarazi",
 "at the end" => "bukaeran",
 "at the beginning" => "hasieran",
 "Set start date" => "Ezarri hasteko eguna",
-"Search..." => "Bilatu...",
 "Add List..." => "Gehitu zerrenda...",
 "New List" => "Zerrenda berria",
-"Settings" => "Ezarpenak",
-"Done" => "Egina",
-"General" => "Orokorra",
-"General Settings" => "Ezarpen orokorrak",
 "Start of week" => "Astearen hasiera",
-"Smart Collections" => "Bilduma argiak",
-"Visibility of Smart Collections" => "Bilduma argien ikusgarritasuna"
+"Visibility of Smart Collections" => "Bilduma argien ikusgarritasuna",
+"Load remaining completed tasks." => "Kargatu betetako  beste zereginak"
 );
 $PLURAL_FORMS = "nplurals=2; plural=(n != 1);";

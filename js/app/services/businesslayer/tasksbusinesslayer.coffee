@@ -1,9 +1,9 @@
 ###
 
-ownCloud - News
+ownCloud - Tasks
 
-@author Bernhard Posselt
-@copyright 2012 Bernhard Posselt dev@bernhard-posselt.com
+@author Raimund Schlüßler
+@copyright 2015
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU AFFERO GENERAL PUBLIC LICENSE
@@ -41,6 +41,11 @@ angular.module('Tasks').factory 'TasksBusinessLayer',
 				else
 					onSuccess(response.data)
 			@_persistence.addTask(task, success)
+
+		getTask: (taskID, onSuccess=null, onFailure=null) ->
+			onSuccess or= ->
+
+			@_persistence.getTask(taskID, onSuccess, true)
 
 		starTask: (taskID) ->
 			@_$tasksmodel.star(taskID)
@@ -164,7 +169,7 @@ angular.module('Tasks').factory 'TasksBusinessLayer',
 					task.reminder.type = 'DATE-TIME'
 					task.reminder.date = moment().startOf('hour').add('h',1)
 					.format('YYYYMMDDTHHmmss')
-			@setReminder(taskID)
+				@setReminder(taskID)
 
 		setReminderDate: (taskID, date, type='day') ->
 			reminder = @_$tasksmodel.getById(taskID).reminder
@@ -349,6 +354,12 @@ angular.module('Tasks').factory 'TasksBusinessLayer',
 
 		getCompletedTasks: (listID) ->
 			@_persistence.getTasks('completed', listID)
+
+		addCategory: (taskID, category) ->
+			@_persistence.addCategory(taskID, category)
+
+		removeCategory: (taskID, category) ->
+			@_persistence.removeCategory(taskID, category)
 
 	return new TasksBusinessLayer(TasksModel, Persistence)
 

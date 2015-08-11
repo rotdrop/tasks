@@ -66,14 +66,15 @@ OC.L10N.register(
     "Thursday" : "csütörtök",
     "Friday" : "péntek",
     "Saturday" : "szombat",
-    "%n Completed Task::%n Completed Tasks" : ["%n befejezett feladat","%n befejezett feladat"],
+    "_%n Completed Task_::_%n Completed Tasks_" : ["%n befejezett feladat","%n befejezett feladat"],
+    "Set due date" : "Lejárati dátum beállítása",
+    "%s %% completed" : "%s %% befejezve",
     "Remind me" : "Emlékeztess",
     "at the end" : "a végénél",
     "at the beginning" : "az elején",
-    "Search..." : "Keresés...",
-    "Settings" : "Beállítások",
-    "General" : "Általános",
-    "Start of week" : "A hét első napja",
-    "Smart Collections" : "Okos gyüjtemény"
+    "Set start date" : "Kezdő dátum beállítása",
+    "Add List..." : "Lista hozzáadása",
+    "New List" : "Új lista",
+    "Start of week" : "A hét első napja"
 },
 "nplurals=2; plural=(n != 1);");

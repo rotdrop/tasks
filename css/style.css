@@ -4,10 +4,35 @@
   padding: 0;
   text-decoration: none;
 }
+#app-navigation li {
+  transition: max-height 300ms ease 0s;
+  max-height: 100px;
+}
+#app-navigation li.edit > a,
+#app-navigation li.edit .app-navigation-entry-utils,
+#app-navigation li.edit .app-navigation-entry-menu {
+  display: none;
+}
+#app-navigation li.edit .app-navigation-entry-edit {
+  display: inline-block;
+}
+#app-navigation li .app-navigation-entry-edit {
+  display: none;
+}
+#app-navigation li a > span.icon {
+  margin-top: -3px;
+}
+#app-navigation li a > span.title {
+  margin-left: 9px;
+}
+#app-navigation li.animate-up {
+  max-height: 0px;
+  border-bottom: 0;
+  overflow: hidden;
+}
 #content {
   overflow: hidden;
   color: #423E3E;
-  background: url("../img/bgBig.png") repeat scroll 0 0 #f3f3f3;
 }
 #content .icon {
   background-image: url("../img/sprites.svg");
@@ -101,14 +126,6 @@
   transition: opacity 100ms ease 0s;
   opacity: 0.6;
 }
-#content .icon.search {
-  background-position: -80px -20px;
-  transition: opacity 100ms ease 0s;
-  opacity: 0.6;
-}
-#content .icon.menu-search {
-  background-position: -80px -20px;
-}
 #content .icon.detail-close {
   background-position: -260px -20px;
   opacity: 0.6;
@@ -127,6 +144,9 @@
 }
 #content .icon.detail-percent {
   background-position: -260px -60px;
+}
+#content .icon.detail-categories {
+  background-position: -180px -40px;
 }
 #content .icon.task-checked,
 #content .icon.detail-checked {
@@ -173,19 +193,11 @@
 #content .icon.toggle-completed-tasks:hover {
   opacity: 1;
 }
-#content li.task-item {
-  cursor: default;
-  height: 37px;
-  list-style: none outside none;
-  overflow: hidden;
-  z-index: 100 !important;
+#content tr:last-child .task-item {
+  height: 39px;
 }
-#content li.task-item.done {
-  opacity: 0.6;
-}
-#content li.task-item.done .title {
-  text-decoration: line-through;
-  text-shadow: none;
+#content tr:last-child .task-item div.task-body {
+  border-width: 1px;
 }
 #content li.task-item:last-child {
   height: 39px;
@@ -193,7 +205,25 @@
 #content li.task-item:last-child .task-body {
   border-width: 1px;
 }
-#content li.task-item .task-body {
+#content li.task-item,
+#content div.task-item {
+  cursor: default;
+  height: 37px;
+  list-style: none outside none;
+  overflow: hidden;
+  z-index: 100 !important;
+}
+#content li.task-item.done,
+#content div.task-item.done {
+  opacity: 0.6;
+}
+#content li.task-item.done .title,
+#content div.task-item.done .title {
+  text-decoration: line-through;
+  text-shadow: none;
+}
+#content li.task-item .task-body,
+#content div.task-item .task-body {
   -moz-box-sizing: border-box;
   background: url("../img/bgTask.png") repeat-x scroll 0 0 #ffffff;
   height: 37px;
@@ -204,7 +234,8 @@
   border-width: 1px 1px 0;
   border-color: #CCCCCC;
 }
-#content li.task-item .task-body .icon.task-separator {
+#content li.task-item .task-body .icon.task-separator,
+#content div.task-item .task-body .icon.task-separator {
   cursor: default;
   height: 100%;
   left: 34px;
@@ -213,24 +244,29 @@
   background-position: 0 -20px;
   width: 2px;
 }
-#content li.task-item .task-body .icon.task-star {
+#content li.task-item .task-body .icon.task-star,
+#content div.task-item .task-body .icon.task-star {
   float: right;
   margin: 0 8px 0 5px;
   background-position: -140px 0px;
   height: 34px;
   width: 20px;
 }
-#content li.task-item .task-body .icon.task-star:hover {
+#content li.task-item .task-body .icon.task-star:hover,
+#content div.task-item .task-body .icon.task-star:hover {
   background-position: -160px 0;
 }
 #content li.task-item .task-body .icon.task-starred,
-#content li.task-item .task-body .icon.task-starred:hover {
+#content div.task-item .task-body .icon.task-starred,
+#content li.task-item .task-body .icon.task-starred:hover,
+#content div.task-item .task-body .icon.task-starred:hover {
   background-position: -180px 0;
   margin-left: 5px;
   margin-right: 8px;
   margin-top: 0;
 }
-#content li.task-item .task-body .title-wrapper {
+#content li.task-item .task-body .title-wrapper,
+#content div.task-item .task-body .title-wrapper {
   cursor: pointer;
   color: #423E3E;
   display: block;
@@ -243,18 +279,22 @@
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
   white-space: nowrap;
 }
-#content li.task-item .task-body .title-wrapper .title {
+#content li.task-item .task-body .title-wrapper .title,
+#content div.task-item .task-body .title-wrapper .title {
   cursor: text;
 }
-#content li.task-item .task-body .title-wrapper.attachment .task-attachment {
+#content li.task-item .task-body .title-wrapper.attachment .task-attachment,
+#content div.task-item .task-body .title-wrapper.attachment .task-attachment {
   display: inline-block;
 }
-#content li.task-item .task-body .title-wrapper .task-attachment {
+#content li.task-item .task-body .title-wrapper .task-attachment,
+#content div.task-item .task-body .title-wrapper .task-attachment {
   display: none;
   height: 20px;
   margin-top: -3px;
 }
-#content li.task-item .task-body .duedate {
+#content li.task-item .task-body .duedate,
+#content div.task-item .task-body .duedate {
   color: #3B6594;
   float: right;
   font-size: 11px;
@@ -262,289 +302,43 @@
   margin: 11px 3px 0 7px;
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
 }
-#content li.task-item .task-body .duedate.overdue {
+#content li.task-item .task-body .duedate.overdue,
+#content div.task-item .task-body .duedate.overdue {
   color: #B3312D;
 }
-#content li.task-item .task-body .listname {
+#content li.task-item .task-body .listname,
+#content div.task-item .task-body .listname {
   color: #888;
   float: right;
   font-size: 11px;
   line-height: 14px;
   margin: 11px 3px 0 7px;
 }
-#app-navigation {
-  background: url("../img/bgTasks.png") repeat scroll 0 0 #e3e3e3;
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  width: 250px;
-  font-family: "Helvetica Neue", "Helvetica", "Arial", Sans-Serif;
-  border-right: 1px solid #CFCFCF;
-  font-size: 13px;
-}
-#app-navigation div.header {
-  height: 37px;
-  border-bottom: 1px solid #AFAFAF;
-  background: -webkit-linear-gradient(top, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0) 100%) repeat scroll 0 0 transparent;
-  background: -moz-linear-gradient(center top, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0) 100%) repeat scroll 0 0 transparent;
-  background: -ms-linear-gradient(center top, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0) 100%) repeat scroll 0 0 transparent;
-  background: -o-linear-gradient(center top, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0) 100%) repeat scroll 0 0 transparent;
-  background: linear-gradient(top, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0) 100%) repeat scroll 0 0 transparent;
-}
-#app-navigation div.header a {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  cursor: pointer;
-  padding: 10px;
-  height: 20px;
-  line-height: 20px;
-}
-#app-navigation div.header.search #search-toolbar {
-  display: block;
-}
-#app-navigation div.header.search #main-toolbar {
-  display: none;
-}
-#app-navigation div.header #search-toolbar {
-  display: none;
-}
-#app-navigation div.header #search-toolbar .icon.menu-search {
-  left: 41px;
-  position: absolute;
-  top: 9px;
-  z-index: 100;
-}
-#app-navigation div.header #search-toolbar input {
-  border-radius: 15px 15px 15px 15px;
-  left: 36px;
-  padding: 4px 4px 4px 25px;
-  position: absolute;
-  right: 36px;
-  top: 6px;
-  width: 210px;
-  -moz-box-sizing: border-box;
-  background: none repeat scroll 0 0 white;
-  border: 1px solid #BDBCBB;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) inset;
-  margin: 0;
-}
-#app-navigation div.header #search-toolbar input:focus {
-  background-color: #F8F8F8;
-  border: 1px solid rgba(43, 136, 217, 0.65);
-  box-shadow: 0 0 4px rgba(43, 136, 217, 0.32), 0 1px 1px rgba(255, 255, 255, 0.43), 0 2px 4px rgba(43, 136, 217, 0.12) inset, 0 0 4px rgba(43, 136, 217, 0.2) inset;
-}
-#app-navigation div.header #search,
-#app-navigation div.header #cancel-search {
-  position: absolute;
-  right: 0;
-  top: 0;
-  cursor: pointer;
-  padding: 8px;
-  display: block;
-}
-#app-navigation div.header #loading {
-  position: absolute;
-  left: 0;
-  top: 0;
-  cursor: pointer;
-  padding: 10px;
-  display: block;
-}
-#app-navigation div.header #loading span {
-  height: 20px;
-  width: 20px;
-  display: inline-block;
-  cursor: pointer;
-  vertical-align: middle;
-  background-size: 20px 20px;
-}
-#app-navigation div.header #loading span.done {
-  background: url("../img/sprites.svg") repeat-x scroll center bottom transparent;
-  background-position: 0 0;
-}
-#app-navigation div.footer {
-  height: 40px;
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-}
-#app-navigation div.footer a {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  cursor: pointer;
-  padding: 10px;
-  height: 20px;
-  line-height: 20px;
-}
-#app-navigation div.footer a.settings {
-  right: 0;
-}
-#app-navigation div.scroll {
-  position: absolute;
-  top: 37px;
-  bottom: 40px;
-  right: 0;
-  left: 0;
-  overflow: auto;
-}
-#app-navigation a.addlist {
-  background: none repeat scroll 0 0 transparent;
-}
-#app-navigation .count {
-  color: #909090;
-  float: right;
-}
-#app-navigation .addlist:hover .title {
-  color: #625F5F;
-}
-#app-navigation .addlist:hover .detail-add {
-  opacity: 1;
-}
-#app-navigation .addlist .title {
-  color: #909090;
-}
-#app-navigation .addlist,
-#app-navigation li a {
-  background: url("../img/divider.svg") repeat-x scroll center bottom transparent;
-  display: block;
-  -moz-box-sizing: border-box;
-  -o-box-sizing: border-box;
-  -webkit-box-sizing: border-box;
-  -ms-box-sizing: border-box;
-  position: relative;
-  height: 34px;
-  padding: 6px 12px 8px 8px;
-  color: #413D3F;
-  font-weight: bold;
-  text-shadow: 0 1px 0 white;
-  white-space: normal;
-  line-height: 20px;
-}
-#app-navigation #collection_lists li a {
-  padding-right: 8px;
-}
-#app-navigation input.edit {
-  border: 1px solid #3F84B3;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1) inset;
-  font-family: "Helvetica Neue", "Helvetica", "Arial", Sans-Serif;
-  font-weight: bold;
-  font-size: 13px;
-  left: 34px;
-  padding: 4px;
-  position: absolute;
-  right: 46px;
-  top: 5px;
-  width: auto;
-  margin: 0;
-  border-radius: 0;
-}
-#app-navigation li {
-  height: 34px;
-  overflow: hidden;
-  position: relative;
-  transition: height 300ms ease 0s !important;
-}
-#app-navigation li.active {
-  border-top: 2px solid #ECECEC;
-  margin-top: -2px;
-}
-#app-navigation li.active a {
-  background: url("../img/bgTasksActive.png") repeat scroll 0 0 transparent;
-  border-bottom: 1px solid transparent;
-  color: white;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
-}
-#app-navigation li.active a .count {
-  color: white;
-}
-#app-navigation li.active .icon.collection-all {
-  background-position: -200px -20px;
-}
-#app-navigation li.active .icon.collection-current {
-  background-position: -240px -100px;
-}
-#app-navigation li.active .icon.list-list {
-  background-position: -40px -20px;
-}
-#app-navigation li.active .icon.collection-starred {
-  background-position: -20px -20px;
-}
-#app-navigation li.active .icon.collection-today {
-  background-position: -240px -40px;
-  color: white;
-  text-shadow: 0 1px 0 #336692;
-}
-#app-navigation li.active .icon.collection-week {
-  background-position: -220px -20px;
-}
-#app-navigation li.active .icon.collection-completed {
-  background-position: -100px -20px;
-}
-#app-navigation li.dragOver a {
-  border: 2px solid #2b88d9;
-  padding: 6px 10px 6px 6px;
-}
-#app-navigation li.dragOver a .title {
-  left: 38px;
-  right: 28px;
-  top: 6px;
-}
-#app-navigation li.animate-up {
-  height: 0px !important;
-  border-bottom: 0;
-}
-#app-navigation li input.edit {
-  border: 1px solid #3F84B3;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1) inset;
-  font-family: "Helvetica Neue", "Helvetica", "Arial", Sans-Serif;
-  font-weight: bold;
-  font-size: 13px;
-  left: 34px;
-  padding: 4px;
-  position: absolute;
-  right: 46px;
-  top: 5px;
-  width: auto;
-  margin: 0;
-  border-radius: 0;
-}
-#app-navigation .title {
-  position: absolute;
-  left: 40px;
-  right: 30px;
-  top: 6px;
-  text-overflow: ellipsis;
-  overflow: hidden;
-  white-space: nowrap;
-}
 #app-content {
-  -webkit-transition: right 0.4s ease-in-out;
-  -moz-transition: right 0.4s ease-in-out;
-  -ms-transition: right 0.4s ease-in-out;
-  -o-transition: right 0.4s ease-in-out;
-  transition: right 0.4s ease-in-out;
-  background: url("../img/bgBig.png") repeat scroll 0 0 #f3f3f3;
-  position: absolute;
-  left: 250px;
-  right: 0;
-  top: 0;
-  bottom: 0;
+  -webkit-transition: all 0.5s ease-in-out;
+  -moz-transition: all 0.5s ease-in-out;
+  -ms-transition: all 0.5s ease-in-out;
+  -o-transition: all 0.5s ease-in-out;
+  transition: all 0.5s ease-in-out;
   overflow-x: hidden;
 }
 #app-content div.content-wrapper {
-  padding: 6px 17px 15px 17px;
+  padding: 6px 17px 75px;
+  box-sizing: border-box;
+  height: 100%;
+  overflow: hidden;
+}
+#app-content div.content-wrapper .task-list {
+  height: 100%;
+  overflow-y: auto;
 }
 #app-content.details-visible {
-  right: 370px;
+  padding-right: 370px;
 }
 #app-content h2 {
   font-weight: bold;
   color: #909090;
-  font-size: 12px;
+  font-size: 13px;
   margin-bottom: 10px;
   margin-top: 20px !important;
   text-shadow: 0 1px 0 #ffffff;
@@ -634,24 +428,24 @@
   position: relative;
 }
 #task-details {
-  -webkit-transition: right 0.4s ease-in-out;
-  -moz-transition: right 0.4s ease-in-out;
-  -ms-transition: right 0.4s ease-in-out;
-  -o-transition: right 0.4s ease-in-out;
-  transition: right 0.4s ease-in-out;
+  -webkit-transition: all 0.5s ease-in-out;
+  -moz-transition: all 0.5s ease-in-out;
+  -ms-transition: all 0.5s ease-in-out;
+  -o-transition: all 0.5s ease-in-out;
+  transition: all 0.5s ease-in-out;
   position: absolute;
   right: -400px;
   bottom: 0;
   top: 0;
-  width: 380px;
+  width: 370px;
   max-width: 100%;
-  padding: 18px 0;
+  padding: 18px 0 17px;
 }
 #task-details.details-visible {
   right: 0;
 }
 #task-details div.content-wrapper {
-  padding: 0 10px;
+  padding: 0 10px 2px 0;
   height: 100%;
 }
 #task-details div.content-wrapper > div {
@@ -659,6 +453,14 @@
   border: 1px solid #CCCCCC;
   height: 100%;
   position: relative;
+}
+#task-details div.content-wrapper div.notice {
+  color: #888;
+  font-size: 16px;
+  position: absolute;
+  text-align: center;
+  top: 50%;
+  width: 100%;
 }
 #task-details div.content-wrapper div.footer {
   background: url("../img/bgTask.png") repeat scroll 0 0 #ffffff;
@@ -726,11 +528,7 @@
   background-position: -40px -40px !important;
 }
 #task-details div.content-wrapper .title {
-  background: -webkit-linear-gradient(top, rgba(255, 255, 255, 0.1) 0%, rgba(0, 0, 0, 0.05) 100%) repeat scroll 0 0 transparent;
-  background: -moz-linear-gradient(center top, rgba(255, 255, 255, 0.1) 0%, rgba(0, 0, 0, 0.05) 100%) repeat scroll 0 0 transparent;
-  background: -ms-linear-gradient(center top, rgba(255, 255, 255, 0.1) 0%, rgba(0, 0, 0, 0.05) 100%) repeat scroll 0 0 transparent;
-  background: -o-linear-gradient(center top, rgba(255, 255, 255, 0.1) 0%, rgba(0, 0, 0, 0.05) 100%) repeat scroll 0 0 transparent;
-  background: linear-gradient(top, rgba(255, 255, 255, 0.1) 0%, rgba(0, 0, 0, 0.05) 100%) repeat scroll 0 0 transparent;
+  background-color: #f5f5f5;
   border-bottom: 1px solid rgba(0, 0, 0, 0.24);
   font-size: 16px;
   font-weight: bold;
@@ -742,6 +540,7 @@
 }
 #task-details div.content-wrapper .title .title-text {
   cursor: text;
+  display: block;
 }
 #task-details div.content-wrapper .title .title-text.strike-through {
   text-decoration: line-through;
@@ -781,11 +580,18 @@
 #task-details div.content-wrapper .title .expandable-container {
   background: none repeat scroll 0 0 #FFFFFF;
   border: 1px solid #AAAAAA;
-  margin: -1px -4px -1px -7px;
+  margin: -1px -4px -1px -6px;
   padding: 0 5px;
+  display: none !important;
 }
 #task-details div.content-wrapper .title .expandable-container .expandingArea {
   position: relative;
+}
+#task-details div.content-wrapper .title.editing .title-text {
+  display: none !important;
+}
+#task-details div.content-wrapper .title.editing .expandable-container {
+  display: block !important;
 }
 #task-details div.content-wrapper .body {
   bottom: 65px;
@@ -866,6 +672,22 @@
 #task-details div.content-wrapper .body .note .note-edit .display-view {
   cursor: text !important;
 }
+#task-details div.content-wrapper .body .note .note-body .content-fakeable .display-view,
+#task-details div.content-wrapper .body .note .note-edit .content-fakeable .display-view {
+  display: block;
+}
+#task-details div.content-wrapper .body .note .note-body .content-fakeable .edit-view,
+#task-details div.content-wrapper .body .note .note-edit .content-fakeable .edit-view {
+  display: none !important;
+}
+#task-details div.content-wrapper .body .note .note-body .content-fakeable.editing .display-view,
+#task-details div.content-wrapper .body .note .note-edit .content-fakeable.editing .display-view {
+  display: none !important;
+}
+#task-details div.content-wrapper .body .note .note-body .content-fakeable.editing .edit-view,
+#task-details div.content-wrapper .body .note .note-edit .content-fakeable.editing .edit-view {
+  display: block !important;
+}
 #task-details div.content-wrapper .body .note .note-body .display-view,
 #task-details div.content-wrapper .body .note .note-edit .display-view {
   white-space: pre-wrap;
@@ -895,7 +717,7 @@
 }
 #task-details div.content-wrapper .body .section {
   background: url("../img/divider.svg") repeat-x scroll center bottom transparent;
-  height: 28px;
+  height: 46px;
   padding: 9px 20px 9px 55px;
   position: relative;
   text-shadow: 0 1px 0 white;
@@ -927,6 +749,13 @@
   padding-top: 10px;
   width: 200px;
   margin: 0px;
+}
+#task-details div.content-wrapper .body .section .select2-search-field input {
+  border: 0 none;
+  box-shadow: none;
+  font-weight: bold;
+  margin-top: 0px;
+  font-family: inherit;
 }
 #task-details div.content-wrapper .body .section select {
   background-color: rgba(0, 0, 0, 0);
@@ -972,11 +801,21 @@
   color: #9FA2A6;
   font-weight: bold;
   margin-top: 3px;
+  display: block;
 }
-#task-details div.content-wrapper .body .section.date.editing .icon.detail-save {
+#task-details div.content-wrapper .body .section .section-edit {
+  display: none;
+}
+#task-details div.content-wrapper .body .section.editing .icon.detail-save {
   display: inline-block;
 }
-#task-details div.content-wrapper .body .section.date.editing .icon.detail-delete {
+#task-details div.content-wrapper .body .section.editing .icon.detail-delete {
+  display: block;
+}
+#task-details div.content-wrapper .body .section.editing .section-title {
+  display: none;
+}
+#task-details div.content-wrapper .body .section.editing .section-edit {
   display: block;
 }
 #task-details div.content-wrapper .body .section.date .icon.detail-date,
@@ -1008,6 +847,12 @@
 #task-details div.content-wrapper .body .section.date .section-title.repeat {
   margin-top: -2px;
 }
+#task-details div.content-wrapper .body .section.active .detail-categories {
+  background-position: -180px -60px;
+}
+#task-details div.content-wrapper .body .section.active .select2-search-field input {
+  color: #4271a6;
+}
 #task-details div.content-wrapper .body .section.editing .icon.detail-remindertype {
   display: block;
 }
@@ -1024,6 +869,10 @@
 }
 #task-details div.content-wrapper .body .section.detail-reminder.date .section-description {
   display: block;
+}
+#task-details div.content-wrapper .body .section.detail-categories {
+  height: auto;
+  padding-left: 50px;
 }
 #task-details div.content-wrapper .body .section.detail-note {
   padding: 20px 0;
@@ -1079,7 +928,6 @@
   background: none repeat scroll 0 0 rgba(0, 0, 0, 0.25);
 }
 #settings_modal {
-  background: url("../img/bgBig.png") repeat scroll 0 0 #f3f3f3;
   border-radius: 6px;
 }
 #settings_modal .header h2 {
@@ -1129,9 +977,6 @@ textarea {
   opacity: 1;
 }
 #content a:hover .icon.detail-settings {
-  opacity: 1;
-}
-#content a:hover .icon.search {
   opacity: 1;
 }
 #content a:hover .icon.detail-delete {
@@ -1384,4 +1229,72 @@ div.percentdone {
   margin-bottom: -3px;
   background-color: #CCC;
   border-radius: 2px 2px 2px 2px;
+}
+#searchresults {
+  padding-top: 0px !important;
+  margin-top: 20px !important;
+  background-color: transparent !important;
+}
+#searchresults #status {
+  padding: 10px 0px 18px !important;
+  height: 22px !important;
+  background-color: transparent !important;
+  font-weight: bold;
+  color: #909090;
+  font-size: 13px !important;
+  text-shadow: 0 1px 0 #ffffff;
+}
+#searchresults span.icon.task-checkbox {
+  background-position: -260px -20px;
+  opacity: 0.6;
+}
+#searchresults span.icon.task-checkbox.task-checked {
+  background-position: -260px -20px;
+}
+#searchresults span.icon.task-star:hover {
+  background-position: -140px 0 !important;
+}
+.template {
+  display: none;
+}
+@media only screen and (max-width: 768px) {
+  #app-content.details-visible {
+    left: -370px !important;
+  }
+}
+.detail-categories .select2-container-multi .select2-choices {
+  border: 1px solid transparent;
+}
+.detail-categories .select2-container-multi .select2-choices .select2-search-choice {
+  color: #4271a6;
+  font-weight: bold;
+  line-height: 14px;
+  margin: 2px 0 3px 5px;
+  background-image: none;
+  background-color: #f5f5f5;
+  box-shadow: none;
+  border-color: #cfcfcf;
+}
+.detail-categories .select2-container-multi .select2-choices .select2-search-choice a.select2-search-choice-close {
+  background-image: url("../img/sprites.svg");
+  background-position: -4px -44px;
+  opacity: 0.4;
+}
+.detail-categories .select2-container-multi .select2-choices .select2-search-choice a.select2-search-choice-close:hover {
+  background-position: -4px -44px;
+  opacity: 0.8;
+}
+.categories-list {
+  display: inline-block;
+  vertical-align: middle;
+}
+.categories-list li {
+  background-color: #f5f5f5;
+  border: 1px solid #cfcfcf;
+  border-radius: 2px;
+  color: #9fa2a6;
+  float: left;
+  font-weight: bold;
+  margin: -5px 4px 0;
+  padding: 2px 5px;
 }
