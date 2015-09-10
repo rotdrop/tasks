@@ -2,6 +2,7 @@ OC.L10N.register(
     "tasks",
     {
     "Tasks" : "Tareas",
+    "Tasks app is unavailable because the calendar is not installed" : "Tareas aplicación no está disponible debido a que el calendario no está instalado",
     "Due yesterday" : "Para ayer",
     "Due today" : "Para hoy",
     "Due tomorrow" : "Para mañana",
@@ -65,6 +66,7 @@ OC.L10N.register(
     "Add an item due today in \"%s\"..." : "Agregar un elemento para hoy en \"%s\"...",
     "Add an item in \"%s\"..." : "Agregar un elemento en \"%s\"...",
     "Add a current item in \"%s\"..." : "Agregar un elemento actual en \"%s\"...",
+    "Add a subtask to \"%s\"..." : "Añadir subtarea a \"%s\"...",
     "_%n Completed Task_::_%n Completed Tasks_" : ["%n tarea completada","%n tareas completadas"],
     "Set due date" : "Fijar fecha límite",
     "%s %% completed" : "%s %% completado",
@@ -93,6 +95,7 @@ OC.L10N.register(
     "(New category)" : "(Nueva categoría)",
     "Select categories..." : "Seleccione categoría...",
     "Loading the task..." : "Cargando tareas...",
-    "Task not found!" : "¡Tarea no encontrada!"
+    "Task not found!" : "¡Tarea no encontrada!",
+    "add a subtask to" : "Añadir subtarea a"
 },
 "nplurals=2; plural=(n != 1);");

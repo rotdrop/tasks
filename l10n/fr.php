@@ -1,6 +1,7 @@
 <?php
 $TRANSLATIONS = array(
 "Tasks" => "Tâches",
+"Tasks app is unavailable because the calendar is not installed" => "L'application \"Tâches\" n'est pas disponible car l'application \"Calendrier\" n'est pas installée.",
 "Due yesterday" => "Pour hier",
 "Due today" => "Pour aujourd'hui",
 "Due tomorrow" => "Pour demain",
@@ -64,6 +65,7 @@ $TRANSLATIONS = array(
 "Add an item due today in \"%s\"..." => "Ajouter un élément échéant aujourd'hui dans \"%s\"...",
 "Add an item in \"%s\"..." => "Ajouter un élément dans \"%s\"...",
 "Add a current item in \"%s\"..." => "Ajouter un élément courant dans \"%s\"...",
+"Add a subtask to \"%s\"..." => "Ajouter une sous-tâche à \"%s\"...",
 "_%n Completed Task_::_%n Completed Tasks_" => array("%n tâche terminée","%n tâches terminées"),
 "Set due date" => "Spécifier la date d'échéance",
 "%s %% completed" => "complétée à %s %%",
@@ -92,6 +94,7 @@ $TRANSLATIONS = array(
 "(New category)" => "(Nouvelle catégorie)",
 "Select categories..." => "Sélectionner des catégories...",
 "Loading the task..." => "Chargement de la tâche…",
-"Task not found!" => "Tâche non trouvée !"
+"Task not found!" => "Tâche non trouvée !",
+"add a subtask to" => "ajouter une sous-tâche à"
 );
 $PLURAL_FORMS = "nplurals=2; plural=(n > 1);";

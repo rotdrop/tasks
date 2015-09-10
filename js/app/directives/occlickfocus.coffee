@@ -19,9 +19,18 @@ You should have received a copy of the GNU Affero General Public
 License along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
 ###
-angular.module('Tasks').filter 'counterFormatter', () ->
-	(count) ->
-		return switch
-			when count == 0  then ''
-			when count > 999 then '999+'
-			else count
+angular.module('Tasks').directive 'ocClickFocus', ['$timeout', ($timeout) ->
+	(scope, elm, attr) ->
+		options = scope.$eval(attr.ocClickFocus)
+		if (angular.isDefined(options) && angular.isDefined(options.selector))
+			elm.click(
+				()->
+					if angular.isDefined(options.timeout)
+						$timeout(() ->
+							$(options.selector).focus()
+						, options.timeout
+						)
+					else
+						$(options.selector).focus()
+			)
+]

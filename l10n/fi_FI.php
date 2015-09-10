@@ -1,6 +1,7 @@
 <?php
 $TRANSLATIONS = array(
 "Tasks" => "Tehtävät",
+"Tasks app is unavailable because the calendar is not installed" => "Tehtäväsovellus ei ole käytettävissä, koska kalenteria ei ole asennettu",
 "Due yesterday" => "Eräpäivä eilen",
 "Due today" => "Eräpäivä tänään",
 "Due tomorrow" => "Eräpäivä huomenna",
@@ -60,6 +61,9 @@ $TRANSLATIONS = array(
 "Thursday" => "torstai",
 "Friday" => "perjantai",
 "Saturday" => "lauantai",
+"Add an important item in \"%s\"..." => "Lisää tärkeä tietue kohteeseen \"%s\"...",
+"Add an item in \"%s\"..." => "Lisää tietue kohteeseen \"%s\"...",
+"Add a subtask to \"%s\"..." => "Lisää alitehtävä kohteeseen \"%s\"...",
 "_%n Completed Task_::_%n Completed Tasks_" => array("%n valmistunut tehtävä","%n valmistunutta tehtävää"),
 "Set due date" => "Aseta eräpäivä",
 "%s %% completed" => "%s %% valmiina",

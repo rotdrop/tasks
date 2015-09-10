@@ -1,7 +1,7 @@
 {
   "name": "task",
   "description": "ownCloud Task App",
-  "version": "0.7.1",
+  "version": "0.8",
   "author": {
     "name": "Raimund Schlüßler",
     "email": "raimund.schluessler@googlemail.com"
@@ -28,6 +28,7 @@
     "grunt-install-dependencies": "^0.2.0",
     "grunt-karma": "~0.4.5",
     "grunt-newer": "~1.1.1",
+    "grunt-phpdocumentor": "^0.4.1",
     "grunt-phpunit": "0.2.0",
     "grunt-wrap": "~0.2.0",
     "phantomjs": "~1.8.1-3"

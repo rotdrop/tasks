@@ -19,9 +19,26 @@ You should have received a copy of the GNU Affero General Public
 License along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
 ###
-angular.module('Tasks').filter 'counterFormatter', () ->
-	(count) ->
-		return switch
-			when count == 0  then ''
-			when count > 999 then '999+'
-			else count
+angular.module('Tasks').factory 'Loading',
+[ () ->
+
+	class Loading
+
+		constructor: () ->
+			@count = 0
+
+		increase: () ->
+			@count += 1
+
+		decrease: () ->
+			@count -= 1
+
+		getCount: () ->
+			return @count
+
+		isLoading: () ->
+			return @count > 0
+
+	return new Loading()
+
+]
