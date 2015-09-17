@@ -3674,33 +3674,6 @@
 }).call(this);
 
 (function() {
-  angular.module('Tasks').factory('Request', [
-    '_Request', '$http', 'Publisher', function(_Request, $http, Publisher) {
-      return new _Request($http, Publisher);
-    }
-  ]);
-
-  angular.module('Tasks').factory('Loading', [
-    '_Loading', function(_Loading) {
-      return new _Loading();
-    }
-  ]);
-
-  angular.module('Tasks').factory('Publisher', [
-    '_Publisher', 'ListsModel', 'TasksModel', 'CollectionsModel', 'SettingsModel', function(_Publisher, ListsModel, TasksModel, CollectionsModel, SettingsModel) {
-      var publisher;
-      publisher = new _Publisher();
-      publisher.subscribeObjectTo(CollectionsModel, 'collections');
-      publisher.subscribeObjectTo(SettingsModel, 'settings');
-      publisher.subscribeObjectTo(ListsModel, 'lists');
-      publisher.subscribeObjectTo(TasksModel, 'tasks');
-      return publisher;
-    }
-  ]);
-
-}).call(this);
-
-(function() {
   angular.module('Tasks').factory('Status', [
     function() {
       var Status;
