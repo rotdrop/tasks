@@ -1,7 +1,7 @@
 (function(angular, $, moment, undefined){
 
 /**
- * ownCloud Task App - v0.8
+ * ownCloud Task App - v0.8.1
  *
  * Copyright (c) 2015 - Raimund Schlüßler <raimund.schluessler@googlemail.com>
  *
@@ -182,74 +182,6 @@
       }
     };
   });
-
-}).call(this);
-
-(function() {
-  angular.module('Tasks').directive('clickableurl', [
-    '$compile', function($compile) {
-      return {
-        restrict: 'A',
-        scope: {
-          clickableurl: '='
-        },
-        link: function(scope, element, attr, task) {
-          return scope.$watch('clickableurl', function(clickableurl) {
-            var a, index, link, mail_regex, match, matchs, text, url_regex, _i, _len;
-            if (!angular.isUndefined(clickableurl)) {
-              url_regex = /(?:\s|^)+(https?:\/\/)?(([\da-z\-]+\.{1})+[a-z]{2,}\.?[\.\d\/\w\-\%=&+\?~#]*)(?:\s|$)+/gi;
-              mail_regex = /(?:\s|^)+(([\w.!$%&'\*\+-\/=\?^`\{\|\}~#])+([@]){1}([\da-z\-]+\.{1})+[a-z]{2,}\.?)(?:\s|$)+/gi;
-              matchs = new Array();
-              while ((match = url_regex.exec(clickableurl))) {
-                matchs.push(match);
-                url_regex.lastIndex--;
-              }
-              while ((match = mail_regex.exec(clickableurl))) {
-                matchs.push(match);
-                mail_regex.lastIndex--;
-              }
-              matchs.sort(function(a, b) {
-                if (a.index < b.index) {
-                  return -1;
-                }
-                if (a.index > b.index) {
-                  return 1;
-                }
-                return 0;
-              });
-              element.empty();
-              index = 0;
-              for (_i = 0, _len = matchs.length; _i < _len; _i++) {
-                link = matchs[_i];
-                if (link.index) {
-                  element.append(document.createTextNode(clickableurl.substring(index, link.index + 1)));
-                }
-                index = link.index + link[0].length;
-                text = link.index ? link[0].substring(1) : link[0];
-                if (link[3] === '@') {
-                  a = $compile('<a href="mailto:' + link[1] + '"\
-							class="handled end-edit"></a>')(scope);
-                  a.text(text);
-                  element.append(a);
-                  continue;
-                }
-                if (angular.isUndefined(link[1])) {
-                  link[1] = 'http://';
-                }
-                a = $compile('<a href="' + link[1] + link[2] + '"\
-						target="_blank" class="handled end-edit"></a>')(scope);
-                a.text(text);
-                element.append(a);
-              }
-              if (index < clickableurl.length) {
-                return element.append(document.createTextNode(clickableurl.substring(index)));
-              }
-            }
-          });
-        }
-      };
-    }
-  ]);
 
 }).call(this);
 
@@ -534,8 +466,13 @@
               return _tasksbusinesslayer.deleteTask(taskID);
             }, 500);
           };
-          this._$scope.editName = function() {
-            return _$location.path('/lists/' + _$scope.route.listID + '/tasks/' + _$scope.route.taskID + '/edit/name');
+          this._$scope.editName = function($event) {
+            if ($($event.target).is('a')) {
+
+            } else {
+              console.log('open edit page');
+              return _$location.path('/lists/' + _$scope.route.listID + '/tasks/' + _$scope.route.taskID + '/edit/name');
+            }
           };
           this._$scope.editDueDate = function($event) {
             if ($($event.currentTarget).is($($event.target).closest('.handler'))) {
@@ -563,7 +500,11 @@
           };
           this._$scope.editNote = function($event) {
             if ($($event.currentTarget).is($($event.target).closest('.handler'))) {
-              return _$location.path('/lists/' + _$scope.route.listID + '/tasks/' + _$scope.route.taskID + '/edit/note');
+              if ($($event.target).is('a')) {
+
+              } else {
+                return _$location.path('/lists/' + _$scope.route.listID + '/tasks/' + _$scope.route.taskID + '/edit/note');
+              }
             } else {
 
             }
@@ -1046,6 +987,8 @@
 }).call(this);
 
 (function() {
+  var __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+
   angular.module('Tasks').controller('TasksController', [
     '$scope', '$window', '$routeParams', 'TasksModel', 'ListsModel', 'CollectionsModel', 'TasksBusinessLayer', '$location', 'SettingsBusinessLayer', 'SearchBusinessLayer', function($scope, $window, $routeParams, TasksModel, ListsModel, CollectionsModel, TasksBusinessLayer, $location, SettingsBusinessLayer, SearchBusinessLayer) {
       var TasksController;
@@ -1097,6 +1040,17 @@
           };
           this._$scope.showSubtaskInput = function(uid) {
             return _$scope.status.addSubtaskTo = uid;
+          };
+          this._$scope.hideSubtasks = function(task) {
+            var descendants, _ref;
+            descendants = _$tasksmodel.getDescendantID(task.id);
+            if (task.id === _$scope.route.taskID) {
+              return false;
+            } else if (_ref = _$scope.route.taskID, __indexOf.call(descendants, _ref) >= 0) {
+              return false;
+            } else {
+              return task.hidesubtasks;
+            }
           };
           this._$scope.showInput = function() {
             var _ref;
@@ -2683,6 +2637,18 @@
             }
           }
           return childrenID;
+        };
+
+        TasksModel.prototype.getDescendantID = function(taskID) {
+          var childID, childrenID, descendantID, _i, _len;
+          childrenID = this.getChildrenID(taskID);
+          descendantID = [];
+          descendantID = descendantID.concat(childrenID);
+          for (_i = 0, _len = childrenID.length; _i < _len; _i++) {
+            childID = childrenID[_i];
+            descendantID = descendantID.concat(this.getDescendantID(childID));
+          }
+          return descendantID;
         };
 
         TasksModel.prototype.filterTasks = function(task, filter) {
